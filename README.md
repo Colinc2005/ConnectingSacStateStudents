@@ -1,9 +1,9 @@
 # ConnectingSacStateStudents
 
 ## Requirements:
--VS Code (frontend)
--Eclipse (back-end / testing)
--Web Browser
+- VS Code (frontend)
+- Eclipse (back-end / testing)
+- Web Browser
 
 ## Running the (frontend portion):
 1. Clone the repository
