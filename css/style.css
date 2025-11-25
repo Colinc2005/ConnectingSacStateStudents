@@ -1,5 +1,55 @@
 body {
     margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
-    padding: 20px;
+    padding: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #004E38;
+    color: white;
+}
+
+.signup-container {
+    background: #c4b581;
+    padding: 25px;
+    margin-top: 40px;
+    border-radius: 8px;
+    width: 500px;
+    color: black;
+}
+
+.signup-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.signup-container input {
+    margin-bottom: 15px;
+    padding: 9px;
+    border: 1px solid #000000;
+    border-radius: 10px;
+}
+
+.signup-container button {
+    padding: 10px;
+    background: #004E38;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.signup-container button:hover {
+    background: #004e38dc;
+}
+
+.login-text {
+    margin-top: 10px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.page-not-found h1 {
+    color:#c4b581;
 }
