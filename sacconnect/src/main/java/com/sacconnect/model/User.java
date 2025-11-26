@@ -1,19 +1,57 @@
+package com.sacconnect.model;
+
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "users")
 public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false)
     private String password;
+    @Column(nullable = false)
     private String name;
     private Integer age;
     private String major;
+    @Column(length = 500)
     private String bio;
     private boolean verified = false;  //whether the email and authentication is completed
+
+    @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @ElementCollection
+    @CollectionTable(
+        name = "user_interests",
+        joinColumns= @JoinColumn(name = "user_id")
+    )
+
+    @Column(name = "interest")
     private Set<String> interests = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(
+        name = "user_tags",
+        joinColumns= @JoinColumn(name = "user_id")
+    )
+
+    @Column(name = "tag")
     private Set<String> tags = new HashSet<>();
 
     public User() {}
@@ -39,7 +77,7 @@ public class User {
     {
         return password;
     }
-    public void setPassword()
+    public void setPassword(String password)
     {
         this.password = password;
     }
@@ -47,7 +85,7 @@ public class User {
     {
         return name;
     }
-    public void setName(String Name)
+    public void setName(String name)
     {
         this.name = name;
     }
