@@ -83,3 +83,28 @@ body {
     border-radius: 10px;
     cursor: pointer;
 }
+
+.messages {
+    width: 100%;
+    height: 500px;       
+    border: 2.5px solid #000000;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #c4b581;
+    margin-bottom: 25px;
+}
+
+.chat button {
+    background:#c4b581;
+}
+.chat button:hover {
+    background:#c4b681e8;
+}
+
+.chat input {
+    background:#c4b581;
+}
+
+.chatroom {
+    color:#c4b581;
+}

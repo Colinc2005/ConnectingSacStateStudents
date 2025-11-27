@@ -28,7 +28,7 @@
                     Already have an account? <a href="./login.html">Login</a>
                 </p>
 
-                <p> id="signupMessage"></p>
+                <p id="signupMessage"> </p>
 
             </form>
         </div>
@@ -73,7 +73,7 @@
 
                 if (response.ok)
                 {
-                    signupMessage.textContent = 'Account created! Redirecting to login...';
+                    signupMessage.textContent = 'Account Created! Redirecting To Login Page...';
                     signupMessage.style.color = 'green';
                     setTimeout(() => {
                         window.location.href = './login.html';
@@ -81,19 +81,16 @@
                 }
                 else
                 {
-                    signupMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Sign up failed.';
+                    signupMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Sign Up Failed.';
                     signupMessage.style.color = 'red';
                 }
             }
             catch (err)
             {
-                signupMessage.textContent = 'Error connecting to server.';
+                signupMessage.textContent = 'Error Connecting To Server.';
                 signupMessage.style.color = 'red';
             }
             });
         </script>
-
-
-
     </body>
 </html>
