@@ -1,4 +1,5 @@
 package com.sacconnect.controller;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,16 +18,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sacconnect.model.User;
 import com.sacconnect.repository.UserRepository;
+import com.sacconnect.service.EmailService;
 
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 public class UserController {
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public UserController(UserRepository  userRepository)//default constructor
+    public UserController(UserRepository  userRepository, EmailService emailService)//default constructor
     {
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     //Registering account
@@ -40,6 +44,10 @@ public class UserController {
         Integer age = body.get("age") == null ? null : (Integer) body.get("age");
         String major = (String) body.get("major");
         String bio = (String) body.get("bio");
+
+
+
+
 
         @SuppressWarnings("unchecked")
         List<String> interestsList = body.get("interests") == null
@@ -59,6 +67,17 @@ public class UserController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body("email, password, and name are required");
         }
+        //hardcode requiring @csus.edu
+        if (!email.toLowerCase().endsWith("@csus.edu"))
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Email must end with @csus.edu");
+        }
+
+        //generating 6 digit code for verification
+        String code = String.format("%06d", (int)(Math.random() * 1_000_000));
+        Instant expiry = Instant.now().plusSeconds(15 * 60); //15 minutes
 
         User user = new User();
         user.setEmail(email);
@@ -70,8 +89,14 @@ public class UserController {
         user.setInterests(interests);
         user.setTags(tags);
         user.setVerified(false);
+        user.setVerificationCode(code);
+        user.setVerificationExpiry(expiry);
 
         userRepository.save(user);
+
+        //send email
+        emailService.sendVerificationEmail(email, code);
+
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
@@ -90,6 +115,58 @@ public class UserController {
             .body(response);
 
     }
+    //account verification
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyUser(@RequestBody Map<String, String> body)
+    {
+        String email = body.get("email");
+        String code = body.get("code");
+
+        if (email == null || code == null)
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("email and code are required");
+        }
+
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if(optionalUser.isEmpty())
+        {
+            return ResponseEntity 
+                .status(HttpStatus.BAD_REQUEST)
+                .body("No user found for that email");
+        }
+        
+        User user = optionalUser.get();
+
+        if (user.isVerified())
+        {
+            return ResponseEntity.ok("Account already verified");
+        }
+
+        if(user.getVerificationCode() == null || 
+        user.getVerificationExpiry() == null || 
+        Instant.now().isAfter(user.getVerificationExpiry()) || 
+        !user.getVerificationCode().equals(code))
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Invalid or expired verification code");
+        }
+
+
+        user.setVerified(true);
+        user.setVerificationCode(null);
+        user.setVerificationExpiry(null);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Email verified successfully");
+
+
+
+    }
+
+
     //login
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> body)
