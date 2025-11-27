@@ -32,6 +32,9 @@ public class User {
     @Column(length = 500)
     private String bio;
     private boolean verified = false;  //whether the email and authentication is completed
+    @Column(length = 6)
+    private String verificationCode;
+    private Instant verificationExpiry;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -57,6 +60,25 @@ public class User {
     public User() {}
 
     //============ Getter and Setters ===============
+    public String getVerificationCode()
+    {
+        return verificationCode;
+    }
+    public void setVerificationCode(String verificationCode)
+    {
+        this.verificationCode = verificationCode;
+    }
+    public Instant getVerificationExpiry()
+    {
+        return verificationExpiry;
+    }
+    public void setVerificationExpiry(Instant verificationExpiry)
+    {
+        this.verificationExpiry = verificationExpiry;
+    }
+
+
+
     public Long getId()
     {
         return id;
