@@ -32,11 +32,6 @@ public class User {
     @Column(length = 500)
     private String bio;
     private boolean verified = false;  //whether the email and authentication is completed
-<<<<<<< HEAD
-    @Column(nullable = false)
-    private String username;
-=======
->>>>>>> f3a5f05fa291e1786f824f7e933c5519c1b32eac
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -62,19 +57,6 @@ public class User {
     public User() {}
 
     //============ Getter and Setters ===============
-<<<<<<< HEAD
-    public String getUsername()
-    {
-        return username;
-    }
-
-    public void setUsername(String username)
-    {
-        this.username = username;
-    }
-
-=======
->>>>>>> f3a5f05fa291e1786f824f7e933c5519c1b32eac
     public Long getId()
     {
         return id;

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lan="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Login</title>
+        <link rel="stylesheet" href="../css/style.css">
+    </head>
+    <body>
+        <h1> Welcome to Student Connect Login</h1>
+        <div class="login-container">
+            <form id="loginForm">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+                
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+
+                <button type="submit">Login</button>
+
+                <p class="signup-text">
+                    First time here? Click here to <a href="./signup.html">Login</a>
+                </p>
+
+                <p id="loginMessage"></p>
+            </form>
+        </div>
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const loginMessage = document.getElementById('loginMessage');
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const body = { email, password };
+
+      try {
+        const response = await fetch('http://localhost:8080/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (response.ok) {
+          loginMessage.textContent = `Welcome, ${data.name || 'student'}!`;
+          loginMessage.style.color = 'green';
+        } else {
+          loginMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Login failed.';
+          loginMessage.style.color = 'red';
+        }
+      } catch (err) {
+        loginMessage.textContent = 'Error connecting to server.';
+        loginMessage.style.color = 'red';
+      }
+    });
+  </script>
+
+
+
+    </body>
+</html>

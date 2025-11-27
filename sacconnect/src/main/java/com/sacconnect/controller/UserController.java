@@ -33,10 +33,7 @@ public class UserController {
     @PostMapping("/register") //This is a method that retrieves/sends/updates/deletes data
     public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> body) //requestbody converts the HTTP request (account creation) and converts it into a java object and map
     {
-<<<<<<< HEAD
         
-=======
->>>>>>> f3a5f05fa291e1786f824f7e933c5519c1b32eac
         String email = (String) body.get("email");
         String password = (String) body.get("password");
         String name = (String) body.get("name");
@@ -137,10 +134,5 @@ public class UserController {
         response.put("verified", user.isVerified());
         return ResponseEntity.ok(response);
     }
-
-    
-
-
-
 
 }
