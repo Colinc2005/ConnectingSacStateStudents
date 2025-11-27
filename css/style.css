@@ -53,3 +53,33 @@ body {
 .page-not-found h1 {
     color:#c4b581;
 }
+
+.login-container {
+    background: #c4b581;
+    padding: 25px;
+    margin-top: 40px;
+    border-radius: 8px;
+    width: 500px;
+    color: black;
+}
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-container input {
+    margin-bottom: 15px;
+    padding: 9px;
+    border: 1px solid #000000;
+    border-radius: 10px;
+}
+
+.login-container button {
+    padding: 10px;
+    background: #004E38;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
