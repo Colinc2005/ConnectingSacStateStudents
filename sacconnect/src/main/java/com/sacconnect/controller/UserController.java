@@ -10,6 +10,7 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +30,8 @@ public class UserController {
     }
 
     //Registering account
-    public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> body)
+    @PostMapping("/register") //This is a method that retrieves/sends/updates/deletes data
+    public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> body) //requestbody converts the HTTP request (account creation) and converts it into a java object and map
     {
         String email = (String) body.get("email");
         String password = (String) body.get("password");
@@ -88,8 +90,8 @@ public class UserController {
 
     }
     //login
-
-    public ResponseEntity<?> loginUser(Map<String, String> body)
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> body)
     {
         String email = body.get("email");
         String password = body.get("password");
