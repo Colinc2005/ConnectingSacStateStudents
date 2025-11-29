@@ -65,29 +65,30 @@
             
             try{
                 const response = await fetch('http://localhost:8080/api/users/register', {
-                    method: 'Post',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
 
-                const data = await response.json().catch(() => null);
 
                 if (response.ok)
                 {
                     signupMessage.textContent = 'Account Created! Redirecting To Login Page...';
                     signupMessage.style.color = 'green';
                     setTimeout(() => {
-                        window.location.href = './login.html';
+                        window.location.href = './verify.html?email=' + encodeURIComponent(email);
                     }, 1500);
                 }
                 else
                 {
-                    signupMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Sign Up Failed.';
+                    const errorText = await response.text();
+                    signupMessage.textContent = errorText || 'Sign Up Failed.';
                     signupMessage.style.color = 'red';
                 }
             }
             catch (err)
             {
+                console.error(err)
                 signupMessage.textContent = 'Error Connecting To Server.';
                 signupMessage.style.color = 'red';
             }

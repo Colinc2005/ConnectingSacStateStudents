@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Email Verification</title>
+        <link rel="stylesheet" href="../css/style.css">
+    </head>
+    <body>
+
+        <h1>Verify Your Email</h1>
+
+        <div class="container">
+            <p>A 6-digit verification code has been sent to your csus email.</p>
+
+            <label for="code">Enter Verification Code</label>
+            <input type="text" id="code" maxlength="6" required>
+
+            <button id="verifyButton">Verify Account</button>
+
+            <p id="verifyMessage"></p>
+
+
+
+        </div>
+
+
+        <script>
+            const verifyButton = document.getElementById('verifyButton');
+            const verifyMessage = document.getElementById('verifyMessage');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+
+            verifyButton.addEventListener('click', async () => {
+                const code = document.getElementById('code').value.trim();
+
+                if (!code)
+            {
+                verifyMessage.textContent = 'Please enter the verification code.';
+                verifyMessage.style.color = 'red';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/users/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, code})
+                });
+
+                const data = await response.text();
+
+                if(response.ok)
+                {
+                    verifyMessage.textContent = 'Verification successful! Redirecting to login...';
+                    verifyMessage.style.color = 'green';
+
+                    setTimeout(() => {
+                        window.location.href = './login.html';
+                    }, 1500);
+                }
+                else
+                {
+                    verifyMessage.textContent = data;
+                    verifyMessage.style.color = 'red';
+                }
+
+            }
+            catch (err)
+            {
+                verifyMessage.textContent = 'Error contacting server.';
+                verifyMessage.style.color = 'red';
+            }
+
+
+            });
+        </script>
+
+
+    </body>
+
+
+
+
+</html>

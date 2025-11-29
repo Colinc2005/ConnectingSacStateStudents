@@ -185,6 +185,8 @@ System.out.println("Email send invoked for: " + email);
     @PostMapping("/verify")
     public ResponseEntity<?> verifyUser(@RequestBody Map<String, String> body)
     {
+        System.out.println("VERIFY endpoint hit with body: " + body);
+
         String email = body.get("email");
         String code = body.get("code");
 
