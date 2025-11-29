@@ -272,3 +272,18 @@ main {
     border-radius: 5px;
     margin-top: auto;
 }
+.chatrooms a {
+    color: #ffffff;              
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.chatrooms a:visited {
+    color: #ffffff;              
+}
+
+.chatrooms a:hover {
+    color: #FFD700;              
+    text-decoration: underline;
+}
