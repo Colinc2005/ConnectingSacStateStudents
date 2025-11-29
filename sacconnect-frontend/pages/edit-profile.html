@@ -8,7 +8,7 @@
   <body>
 
     <nav class="navigation">
-      <a href="../index.html">Home</a> |
+      <a href="index.html">Home</a> |
       <a href="profile.html">Profile</a> |
       <a href="chat.html">Messages</a> |
       <a href="#" id="logoutLink">Logout</a>
@@ -52,7 +52,7 @@
 
       // If not logged in, bounce to login
       if (!userId || !userEmail) {
-        window.location.href = './login.html';
+        window.location.href = '../login.html';
       }
 
       // Logout behavior
@@ -60,7 +60,7 @@
         e.preventDefault();
         localStorage.removeItem('userId');
         localStorage.removeItem('userEmail');
-        window.location.href = './login.html';
+        window.location.href = '../login.html';
       });
 
       // Pre-fill form with existing profile data (requires a GET endpoint like /api/users/{id})
@@ -137,7 +137,7 @@
             messageEl.style.color = 'green';
 
             setTimeout(() => {
-              window.location.href = '../index.html';
+              window.location.href = './index.html';
             }, 1000);
           } else {
             messageEl.textContent = text || 'Failed to save profile.';

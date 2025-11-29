@@ -3,16 +3,16 @@
     <head>
         <meta charset="UTF-8"> <!-- page uses standard encoding for characters  -->
         <title>Student Connect</title> <!-- title for top of page -->
-        <link rel = "stylesheet" href = "css/style.css"> <!-- reference to css styling sheet -->
+        <link rel = "stylesheet" href = "../css/style.css"> <!-- reference to css styling sheet -->
     </head>
     <body class="homepage">
 
         <header>
         <nav class="navigation"> <!-- navigation bar at the top  -->
             <a href="index.html">Home</a> |
-            <a href="pages/profile.html">Profile</a> |
-            <a href="pages/chat.html">Messages</a> |
-            <a href="logout">Logout</a>
+            <a href="profile.html">Profile</a> |
+            <a href="chat.html">Messages</a> |
+            <a href="#" id="logoutLink">Logout</a>
         </nav>
         </header>
 
@@ -41,4 +41,22 @@
         </footer>
     
     </body>
+    <script>
+    // If not logged in, force back to login
+        const logoutLink = document.getElementById('logoutLink');
+        const userId = localStorage.getItem('userId');
+        const userEmail = localStorage.getItem('userEmail');
+
+      if (!userId || !userEmail) {
+        window.location.href = '../login.html';
+      }
+
+      // Logout: clear local storage and go to login
+      logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+    </script>
 </html>

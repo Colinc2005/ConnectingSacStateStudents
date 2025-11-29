@@ -8,7 +8,7 @@
   <body>
     <header>
       <nav class="navigation">
-        <a href="../index.html">Home</a> |
+        <a href="index.html">Home</a> |
         <a href="profile.html">Profile</a> |
         <a href="chat.html">Messages</a> |
         <a href="#" id="logoutLink">Logout</a>
@@ -49,7 +49,7 @@
 
       // If not logged in, force back to login
       if (!userId || !userEmail) {
-        window.location.href = './login.html';
+        window.location.href = '../login.html';
       }
 
       // Logout: clear local storage and go to login
@@ -57,7 +57,7 @@
         e.preventDefault();
         localStorage.removeItem('userId');
         localStorage.removeItem('userEmail');
-        window.location.href = './login.html';
+        window.location.href = '../login.html';
       });
 
       // Edit profile: go to your edit-profile flow

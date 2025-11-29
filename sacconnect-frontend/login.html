@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
 
@@ -21,7 +21,7 @@
         <button type="submit">Login</button>
 
         <p class="signup_login">
-          First time here? Click here to <a href="./signup.html">Sign Up</a>
+          First time here? Click here to <a href="pages/signup.html">Sign Up</a>
         </p>
 
         <p id="loginMessage"></p>
@@ -57,10 +57,10 @@
             
             if (!data.profileComplete) {
               
-              window.location.href = './edit-profile.html';
+              window.location.href = 'pages/edit-profile.html';
             } else {
               
-              window.location.href = '../index.html';
+              window.location.href = 'pages/index.html';
             }
 
           } else {
