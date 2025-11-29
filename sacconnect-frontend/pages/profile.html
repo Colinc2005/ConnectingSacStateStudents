@@ -1,39 +1,99 @@
 <!DOCTYPE html>
-<html lang=en>
-    <head>
-        <meta charset="UTF-8">
-        <title>Profile Page</title>
-        <link rel="stylesheet" href="../css/style.css">
-    </head>
-    <body>
-        <header>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Profile Page</title>
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <header>
+      <nav class="navigation">
+        <a href="../index.html">Home</a> |
+        <a href="profile.html">Profile</a> |
+        <a href="chat.html">Messages</a> |
+        <a href="#" id="logoutLink">Logout</a>
+      </nav>
+    </header>
 
-        <nav class="navigation">
-            <a href="../index.html">Home</a> |
-            <a href="profile.html">Profile</a> |
-            <a href="chat.html">Messages</a> |
-            <a href="logout">Logout</a>
-        </nav>
-
-        </header>
-    <div class="profile-container"> <!-- Change this later -->
-    <div class="profile-header"> <!-- Change this later -->
-
+    <div class="profile-container">
+      <div class="profile-header">
+        <!-- static placeholder avatar for now -->
         <img src="avatar.jpg" alt="User Avatar" class="profile-avatar">
-        <h1 class="profile-name">Username</h1>
-        <button class="follow-button">Follow</button>
 
+        <!-- will be filled from backend -->
+        <h1 class="profile-name" id="profileName">Username</h1>
+
+        <button class="follow-button" id="editProfileButton">Edit Profile</button>
+      </div>
+
+      <div class="profile-bio">
+        <p id="profileBio">Bio</p>
+      </div>
+
+      <div class="profile-stats">
+        <!-- these can be wired later when you have posts/follows in DB -->
+        <span id="postsStat">Posts: 0</span>
+        <span id="followersStat">Followers: 0</span>
+        <span id="followingStat">Following: 0</span>
+      </div>
     </div>
 
-    <div class="profile-bio"> <!-- Change this later -->
-        <p>Bio</p>
-    </div>
+    <script>
+      const logoutLink = document.getElementById('logoutLink');
+      const editProfileButton = document.getElementById('editProfileButton');
+      const profileNameEl = document.getElementById('profileName');
+      const profileBioEl = document.getElementById('profileBio');
 
-    <div class="profile-stats"> <!-- Change this later -->
-        <span>Posts: 12</span> 
-        <span>Followers: 150</span>
-        <span>Following: 75</span>
-    </div>
-    </div>
-    </body>
+      const userId = localStorage.getItem('userId');
+      const userEmail = localStorage.getItem('userEmail');
+
+      // If not logged in, force back to login
+      if (!userId || !userEmail) {
+        window.location.href = './login.html';
+      }
+
+      // Logout: clear local storage and go to login
+      logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userEmail');
+        window.location.href = './login.html';
+      });
+
+      // Edit profile: go to your edit-profile flow
+      editProfileButton.addEventListener('click', () => {
+        window.location.href = './edit-profile.html';
+      });
+
+      // Load the latest profile data from backend
+      async function loadProfile() {
+        try {
+          const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+
+          if (!response.ok) {
+            console.error('Failed to load profile:', await response.text());
+            return;
+          }
+
+          const user = await response.json();
+
+          // Match the keys you return from your login/register endpoints:
+          // id, email, name, Age, major, bio, interests, tags, verified
+          profileNameEl.textContent = user.name || 'Student';
+          profileBioEl.textContent = user.bio && user.bio.trim() !== ''
+            ? user.bio
+            : 'No bio yet. Click "Edit Profile" to add one.';
+
+          // Stats are just placeholders for now.
+          // Once you have posts/followers in the DB, fetch and set them here.
+          // document.getElementById('postsStat').textContent = `Posts: ${user.postsCount || 0}`;
+          // etc.
+        } catch (err) {
+          console.error('Error loading profile:', err);
+        }
+      }
+
+      loadProfile();
+    </script>
+  </body>
 </html>

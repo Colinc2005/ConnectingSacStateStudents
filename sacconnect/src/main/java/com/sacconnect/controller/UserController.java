@@ -11,6 +11,8 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -266,6 +268,19 @@ System.out.println("Email send invoked for: " + email);
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Invalid email or password");
         }
+
+        if (!user.isVerified())
+        {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Verify Email before logging in"); 
+        }
+
+        boolean profileComplete =
+            user.getAge() != null &&
+            user.getMajor() != null &&
+            user.getBio() != null;
+
         
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
@@ -277,7 +292,87 @@ System.out.println("Email send invoked for: " + email);
         response.put("interests", user.getInterests());
         response.put("tags", user.getTags());
         response.put("verified", user.isVerified());
+        response.put("profileComplete", profileComplete);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> body)
+    {
+        Long id = ((Number) body.get("id")).longValue();
+
+        Optional<User> optionalUser = userRepository.findById(id);
+
+        if (optionalUser.isEmpty())
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("User not found");
+        }
+
+        User user = optionalUser.get();
+
+        String name = (String) body.get("name");
+        Integer age = body.get("age") == null ? null : (Integer) body.get("age");
+        String major = (String) body.get("major");
+        String bio = (String) body.get("bio");
+
+        @SuppressWarnings("unchecked")
+        List<String> interestsList = body.get("interests") == null
+            ? Collections.emptyList()
+            : (List<String>) body.get("interests");
+        Set<String> interests = new HashSet<>(interestsList);
+
+        @SuppressWarnings("unchecked")
+        List<String> tagsList = body.get("tags") == null
+            ? Collections.emptyList()
+            : (List<String>) body.get("tags");
+        Set<String> tags = new HashSet<>(tagsList);
+
+        user.setName(name);
+        user.setAge(age);
+        user.setMajor(major);
+        user.setBio(bio);
+        user.setInterests(interests);
+        user.setTags(tags);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Profile Updated");
+
+
+
+
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id)
+    {
+        Optional<User> opt = userRepository.findById(id);
+        if (opt.isEmpty())
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        User user = opt.get();
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("name", user.getName());
+        response.put("Age", user.getAge());
+        response.put("major", user.getMajor());
+        response.put("bio", user.getBio());
+        response.put("interests", user.getInterests());
+        response.put("tags", user.getTags());
+        response.put("verified", user.isVerified());
+
+        return ResponseEntity.ok(response);
+        
+    }
+
+
+
+
+
 
 }

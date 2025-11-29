@@ -1,37 +1,154 @@
 <!DOCTYPE html>
-<html lang=en>
-    <head>
-        <meta charset="UTF-8">
-        <title>Profile Page</title>
-        <link rel="stylesheet" href="../css/style.css">
-    </head>
-    <body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
 
-        <nav class="navigation">
-            <a href="../index.html">Home</a> |
-            <a href="profile.html">Profile</a> |
-            <a href="chat.html">Messages</a> |
-            <a href="logout">Logout</a>
-        </nav>
+    <nav class="navigation">
+      <a href="../index.html">Home</a> |
+      <a href="profile.html">Profile</a> |
+      <a href="chat.html">Messages</a> |
+      <a href="#" id="logoutLink">Logout</a>
+    </nav>
 
-        <div class="profile-container">
-        <div class="profile-header">
+    <div class="container">
+      <h1>Edit Your Profile</h1>
 
-            <img src="avatar.jpg" alt="User Avatar" class="profile-avatar">
-            <h1 class="profile-name">Username</h1>
-            <button class="edit-button">Edit Profile</button>
+      <form id="editProfileForm">
+        <label for="name">Display Name</label>
+        <input type="text" id="name" required>
 
-        </div>
+        <label for="age">Age</label>
+        <input type="number" id="age" min="0">
 
-        <div class="profile-bio">
-            <p>This is the user bio. It can be a few sentences about the user.</p>
-        </div>
+        <label for="major">Major</label>
+        <input type="text" id="major">
 
-        <div class="profile-stats">
-            <span>Posts: 12</span>
-            <span>Followers: 150</span>
-            <span>Following: 75</span>
-        </div>
-        </div>
-    </body>
+        <label for="bio">Bio</label>
+        <textarea id="bio" rows="4" placeholder="Write a short description about yourself..."></textarea>
+
+        <label for="interests">Interests (comma-separated)</label>
+        <input type="text" id="interests" placeholder="e.g. coding, cars, gym">
+
+        <label for="tags">Profile Tags (comma-separated)</label>
+        <input type="text" id="tags" placeholder="e.g. CS major, transfer, freshman">
+
+        <button type="submit">Save Profile</button>
+
+        <p id="editProfileMessage"></p>
+      </form>
+    </div>
+
+    <script>
+      const editForm = document.getElementById('editProfileForm');
+      const messageEl = document.getElementById('editProfileMessage');
+      const logoutLink = document.getElementById('logoutLink');
+
+      const userId = localStorage.getItem('userId');
+      const userEmail = localStorage.getItem('userEmail');
+
+      // If not logged in, bounce to login
+      if (!userId || !userEmail) {
+        window.location.href = './login.html';
+      }
+
+      // Logout behavior
+      logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userEmail');
+        window.location.href = './login.html';
+      });
+
+      // Pre-fill form with existing profile data (requires a GET endpoint like /api/users/{id})
+      async function loadProfile() {
+        try {
+          const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+          if (!response.ok) {
+            console.warn('Failed to load profile:', await response.text());
+            return;
+          }
+
+          const user = await response.json();
+
+          document.getElementById('name').value = user.name || '';
+          document.getElementById('age').value = user.Age != null ? user.Age : '';
+          document.getElementById('major').value = user.major || '';
+          document.getElementById('bio').value = user.bio || '';
+
+          // interests and tags are Sets on the backend → come back as arrays in JSON
+          if (user.interests && Array.isArray(user.interests)) {
+            document.getElementById('interests').value = user.interests.join(', ');
+          }
+          if (user.tags && Array.isArray(user.tags)) {
+            document.getElementById('tags').value = user.tags.join(', ');
+          }
+        } catch (err) {
+          console.error('Error loading profile:', err);
+        }
+      }
+
+      loadProfile();
+
+      editForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const ageRaw = document.getElementById('age').value.trim();
+        const major = document.getElementById('major').value.trim();
+        const bio = document.getElementById('bio').value.trim();
+        const interestsRaw = document.getElementById('interests').value.trim();
+        const tagsRaw = document.getElementById('tags').value.trim();
+
+        const age = ageRaw === '' ? null : parseInt(ageRaw, 10);
+
+        const interests = interestsRaw
+          ? interestsRaw.split(',').map(s => s.trim()).filter(Boolean)
+          : [];
+
+        const tags = tagsRaw
+          ? tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
+          : [];
+
+        const body = {
+          id: Number(userId),
+          name,
+          age,
+          major,
+          bio,
+          interests,
+          tags
+        };
+
+        try {
+          const response = await fetch('http://localhost:8080/api/users/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+
+          const text = await response.text();
+
+          if (response.ok) {
+            messageEl.textContent = 'Profile saved! Redirecting to home...';
+            messageEl.style.color = 'green';
+
+            setTimeout(() => {
+              window.location.href = '../index.html';
+            }, 1000);
+          } else {
+            messageEl.textContent = text || 'Failed to save profile.';
+            messageEl.style.color = 'red';
+          }
+        } catch (err) {
+          console.error('Error saving profile:', err);
+          messageEl.textContent = 'Error contacting server.';
+          messageEl.style.color = 'red';
+        }
+      });
+    </script>
+  </body>
 </html>
