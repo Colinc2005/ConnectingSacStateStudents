@@ -1,85 +1,274 @@
+/* Color variables */
+:root {
+    --primary-bg: #004E38;
+    --secondary-bg: #c4b581;
+    --light-bg: #f9f9f9;
+    --text-light: #ffffff;
+    --text-dark: #000000;
+}
+
+/* Reset and body */
 body {
     margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
     padding: 100px;
+    font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #004E38;
-    color: white;
+    background: var(--primary-bg);
+    color: var(--text-light);
 }
 
-.signup-container {
-    background: #c4b581;
+/* Navigation */
+.navigation a{
+    color: var(--secondary-bg);
+    text-decoration: none;
+}
+
+.navigation a:link {
+    color: var(--text-light);
+    text-decoration: none;
+
+}
+
+.navigation a:visited {
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.navigation a:hover{
+    color: var(--secondary-bg);
+    text-decoration: underline;
+    text-decoration-color: black;
+}
+
+/* Navigation for the signup / login pages */
+.signup_login a {
+    border-radius: 10px;
+    padding: 5px;
+    color: #004E38;
+    background: var(--primary-bg);
+}
+.signup_login a:link {
+    color: var(--text-light);
+    background: var(--secondary-bg);
+    text-decoration: none;
+}
+
+.signup_login a:visited {
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.signup_login a:hover {
+    color: var(--secondary-bg);
+    background: #004e38dc;
+    text-decoration: underline;
+    text-decoration-color: var(--secondary-bg);
+}
+
+/* Containers (signup, login, profile) */
+.container {
+    background: var(--secondary-bg);
     padding: 25px;
     margin-top: 40px;
     border-radius: 8px;
     width: 500px;
-    color: black;
+    color: var(--text-dark);
 }
 
-.signup-container form {
+.container form {
     display: flex;
     flex-direction: column;
 }
 
-.signup-container input {
+.container input {
     margin-bottom: 15px;
     padding: 9px;
-    border: 1px solid #000000;
+    border: 1px solid var(--text-dark);
     border-radius: 10px;
+    background: var(--secondary-bg);
 }
 
-.signup-container button {
+.container button {
     padding: 10px;
-    background: #004E38;
-    color: white;
+    background: var(--primary-bg);
+    color: var(--text-light);
     border: none;
     border-radius: 10px;
     cursor: pointer;
 }
 
-.signup-container button:hover {
-    background: #004e38dc;
+.container button:hover {
+    background: #004e38dc; /* Slightly lighter hover effect */
+    color: var(--secondary-bg);
 }
 
+/* Login/signup text */
 .login-text {
     margin-top: 10px;
     font-size: 14px;
     text-align: center;
 }
 
+/* 404 page */
 .page-not-found h1 {
-    color:#c4b581;
+    color: var(--secondary-bg);
 }
 
-.login-container {
-    background: #c4b581;
-    padding: 25px;
-    margin-top: 40px;
-    border-radius: 8px;
-    width: 500px;
+/* Chat messages */
+.messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 2px solid var(--text-dark);
+    padding: 10px;
+    background: var(--light-bg);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.message {
+    max-width: 60%;
+    padding: 8px 12px;
+    border-radius: 12px;
+}
+
+.sent {
+    align-self: flex-end;
+    background-color: var(--secondary-bg);
+    color: var(--text-dark);
+    border-bottom-right-radius: 0;
+}
+
+.received {
+    align-self: flex-start;
+    background-color: var(--primary-bg);
+    color: var(--text-light);
+    border-bottom-left-radius: 0;
+}
+
+/* Chat form */
+.chartoom {
+    padding: 20px;
+}
+
+.chat {
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--secondary-bg);
+    color: var(--primary-bg);
+    
+}
+
+.chat button {
+    background: var(--primary-bg);
+    border-radius: 10px;
+    color: var(--text-light);
+}
+
+.chat button:hover {
+    background: #004e38dc;
+    color: var(--secondary-bg);
+}
+
+.chat input {
+    background: var(--secondary-bg);
+}
+
+/* Chatroom text */
+.chatroom {
+    color: var(--secondary-bg);
+}
+
+/* Profile */
+.profile-container {
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: var(--secondary-bg);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.edit-button {
+    margin-left: auto;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.profile-bio {
+    margin-top: 20px;
+}
+
+.profile-stats {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.aside {
+    float:left;
+    width:200px;
+}
+
+/* Homepage (index) */
+body.homepage {
+    display: flex; /* flex allows it to grow and shrink dynamically */
+    flex-direction: column;
+    min-height: 90vh;
+    padding: 40px;
+    align-items: center;
+}
+
+.layout {
+    display: flex;
+    gap: 50px;
+    width: 80%;
+    max-width: 1000px;
+    margin-top: 30px;
+}
+
+.feed {
+    padding: 8px;
+    background:#c4b581;
     color: black;
 }
 
-.login-container form {
-    display: flex;
-    flex-direction: column;
+main {
+    flex: 3; /* takes more space */
 }
 
-.login-container input {
-    margin-bottom: 15px;
-    padding: 9px;
-    border: 1px solid #000000;
-    border-radius: 10px;
+.friends {
+    flex: 1; 
+    background: var(--secondary-bg);
+    color: var(--text-dark);
+    padding: 15px;
+    border-radius: 8px;
+    height: fit-content;
 }
 
-.login-container button {
-    padding: 10px;
-    background: #004E38;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
+
+.footer {
+    display: inline-block;
+    padding: 0px 10px;
+    background: var(--secondary-bg);
+    color: var(--text-dark);
+    border-radius: 5px;
+    margin-top: auto;
 }

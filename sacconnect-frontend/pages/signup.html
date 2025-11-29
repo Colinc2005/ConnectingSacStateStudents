@@ -7,8 +7,8 @@
     </head>
     <body>
         <h1> Student Connect - Sign Up</h1>
-        <div class = "signup-container">
-            <form id="signupForm"> 
+        <div class = "container">
+            <form> 
 
                 <label for ="username">Username</label>
                 <input type="text" id="username" required>
@@ -24,14 +24,15 @@
 
                 <button type="submit">Create Account</button>
 
-                <p class="login-text">
+                <p class="signup_login">
                     Already have an account? <a href="./login.html">Login</a>
                 </p>
 
-                <p> id="signupMessage"></p>
+                <p id="signupMessage"> </p>
 
             </form>
         </div>
+
         <script>
             const signupForm = document.getElementById('signupForm');
             const signupMessage = document.getElementById('signupMessage');
@@ -73,7 +74,7 @@
 
                 if (response.ok)
                 {
-                    signupMessage.textContent = 'Account created! Redirecting to login...';
+                    signupMessage.textContent = 'Account Created! Redirecting To Login Page...';
                     signupMessage.style.color = 'green';
                     setTimeout(() => {
                         window.location.href = './login.html';
@@ -81,19 +82,16 @@
                 }
                 else
                 {
-                    signupMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Sign up failed.';
+                    signupMessage.textContent = (data && data.message) || JSON.stringify(data) || 'Sign Up Failed.';
                     signupMessage.style.color = 'red';
                 }
             }
             catch (err)
             {
-                signupMessage.textContent = 'Error connecting to server.';
+                signupMessage.textContent = 'Error Connecting To Server.';
                 signupMessage.style.color = 'red';
             }
             });
         </script>
-
-
-
     </body>
 </html>
