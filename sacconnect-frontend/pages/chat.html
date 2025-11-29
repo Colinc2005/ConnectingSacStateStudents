@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Chatting with [xxxxxx]</title>
+        <link rel="stylesheet" href = "../css/style.css">
+    </head>
+    <body>
+
+        <header>
+        <nav class="navigation">
+            <a href="../index.html">Home</a> |
+            <a href="profile.html">Profile</a> |
+            <a href="chat.html">Messages</a> |
+            <a href="logout">Logout</a>
+        </nav>
+        </header>
+
+        <div class="chatroom">
+            <h1>Chatting with [xxxxxx]</h1>
+            <div id="messages" class="messages"></div>
+
+            <form class="chat">
+
+                <label for="message">Enter Message:</label>
+                <input type="text" id="message" name="text">
+
+                <button type="submit">Send Message</button>
+                
+            </form>
+
+        </div>
+
+        <script>
+            const form = document.querySelector(".chat");
+            const input = document.getElementById("message");
+            const messages = document.getElementById("messages");
+
+            form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const text = input.value.trim();
+            if (text === "") return;
+
+            const msg = document.createElement("div");
+            msg.classList.add("message", "sent");
+            msg.textContent = text;
+
+            messages.appendChild(msg);
+
+            input.value = "";
+            messages.scrollTop = messages.scrollHeight;
+        });
+        </script>
+    </body>
+</html>
+

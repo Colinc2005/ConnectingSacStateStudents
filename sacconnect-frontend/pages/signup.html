@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset = "UTF-8">
+        <title>Sign up</title>
+        <link rel = "stylesheet" href = "../css/style.css">
+    </head>
+    <body>
+        <h1> Student Connect - Sign Up</h1>
+        <div class = "container">
+            <form id="signupForm"> 
+
+                <label for ="username">Username</label>
+                <input type="text" id="username" required>
+
+                <label for="email">Email (must be suffixed @csus.edu)</label>
+                <input type="email" id="email" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password">
+
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+
+                <button type="submit">Create Account</button>
+
+                <p class="signup_login">
+                    Already have an account? <a href="./login.html">Login</a>
+                </p>
+
+                <p id="signupMessage"> </p>
+
+            </form>
+        </div>
+
+        <script>
+            const signupForm = document.getElementById('signupForm');
+            const signupMessage = document.getElementById('signupMessage');
+
+            signupForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (password !== confirmPassword)
+            {
+                signupMessage.textContent = 'Passwords do not match.';
+                signupMessage.style.color = 'red';
+                return;
+            }
+
+            const body = {
+                email: email,
+                password: password,
+                name: username,
+                age: null,
+                major: null,
+                bio: null,
+                interests: [],
+                tags: []
+            };
+            
+            try{
+                const response = await fetch('http://localhost:8080/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+
+                if (response.ok)
+                {
+                    signupMessage.textContent = 'Account Created! Redirecting To Login Page...';
+                    signupMessage.style.color = 'green';
+                    setTimeout(() => {
+                        window.location.href = './verify.html?email=' + encodeURIComponent(email);
+                    }, 1500);
+                }
+                else
+                {
+                    const errorText = await response.text();
+                    signupMessage.textContent = errorText || 'Sign Up Failed.';
+                    signupMessage.style.color = 'red';
+                }
+            }
+            catch (err)
+            {
+                console.error(err)
+                signupMessage.textContent = 'Error Connecting To Server.';
+                signupMessage.style.color = 'red';
+            }
+            });
+        </script>
+    </body>
+</html>
