@@ -75,11 +75,43 @@ public class UserController {
                 .body("Email must end with @csus.edu");
         }
 
-        //generating 6 digit code for verification
-        String code = String.format("%06d", (int)(Math.random() * 1_000_000));
-        Instant expiry = Instant.now().plusSeconds(15 * 60); //15 minutes
 
-        User user = new User();
+        //fixes duplicate emails to send code
+        Optional<User> existingOpt = userRepository.findByEmail(email);
+
+        //6digit verificaiton code
+        String code = String.format("%06d", (int) (Math.random() * 1_000_000));
+        Instant expiry = Instant.now().plusSeconds(15 * 60);
+
+        User user;
+
+        boolean isNewUser = false;
+
+        if (existingOpt.isPresent()) {
+            user = existingOpt.get();
+            if (user.isVerified())
+            {
+                return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Email is already verified. Please log in");
+            }
+            //updates info and resends code if not verified
+            user.setPassword(password);
+            user.setName(name);
+            user.setAge(age);
+            user.setMajor(major);
+            user.setBio(bio);
+            user.setInterests(interests);
+            user.setTags(tags);
+            user.setVerified(false);
+            user.setVerificationCode(code);
+            user.setVerificationExpiry(expiry);
+
+
+        }
+        else
+        {
+        user = new User();
         user.setEmail(email);
         user.setPassword(password);
         user.setName(name);
@@ -91,11 +123,39 @@ public class UserController {
         user.setVerified(false);
         user.setVerificationCode(code);
         user.setVerificationExpiry(expiry);
+        isNewUser = true;
+        }
 
         userRepository.save(user);
 
         //send email
         emailService.sendVerificationEmail(email, code);
+        if (existingOpt.isPresent()) {
+    user = existingOpt.get();
+    System.out.println("Existing user found. Verified = " + user.isVerified());
+
+    if (user.isVerified()) {
+        System.out.println("Blocking re-register because account is already verified.");
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body("Email is already verified. Please log in");
+    }
+
+    System.out.println("Resending verification code to UNVERIFIED user.");
+    
+} else {
+    System.out.println("Creating NEW user.");
+    
+}
+System.out.println("Sending verification email with code: " + code);
+emailService.sendVerificationEmail(email, code);
+System.out.println("Email send invoked for: " + email);
+
+
+
+
+
+        System.out.println("REGISTER called for email: " + email);
 
 
         Map<String, Object> response = new HashMap<>();
@@ -113,6 +173,12 @@ public class UserController {
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(response);
+
+        
+
+
+
+    
 
     }
     //account verification
