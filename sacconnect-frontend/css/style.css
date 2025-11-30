@@ -212,6 +212,52 @@ body {
     cursor: pointer;
 }
 
+.report-button {
+    background-color: var(--primary-bg);      /* dark red */
+    color: white;
+    padding: 6px 14px;
+    border: 2px solid black;      /* bright red outline */
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;   
+}
+
+.report-button:hover {
+    background-color: #337D67;      /* slightly lighter on hover */
+    transform: scale(1.05);
+
+}
+
+
+.report-popup {
+    position: fixed;
+    padding: 25px;
+    font-size: 25px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 25%;
+    height: 50%;
+    background: var(--secondary-bg);
+    border-radius: 8px;
+    display: none;                    /* hide until opened */
+    justify-content: center;
+    align-items: center;   
+    z-index: 101;
+}
+
+.report-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);  /* dim */
+    display: none;                  /* hidden until opened */
+    z-index: 100; 
+}
+
 .profile-bio {
     margin-top: 20px;
 }
@@ -271,4 +317,19 @@ main {
     color: var(--text-dark);
     border-radius: 5px;
     margin-top: auto;
+}
+.chatrooms a {
+    color: #ffffff;              
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.chatrooms a:visited {
+    color: #ffffff;              
+}
+
+.chatrooms a:hover {
+    color: #FFD700;              
+    text-decoration: underline;
 }

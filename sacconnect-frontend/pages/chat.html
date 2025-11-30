@@ -2,72 +2,269 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Chatting with [xxxxxx]</title>
-        <link rel="stylesheet" href = "../css/style.css">
+        <title>Chatroom</title>
+        <link rel="stylesheet" href="../css/style.css">
     </head>
     <body>
 
         <header>
-        <nav class="navigation">
-            <a href="index.html">Home</a> |
-            <a href="profile.html">Profile</a> |
-            <a href="chat.html">Messages</a> |
-            <a href="#" id="logoutLink">Logout</a>
-        </nav>
+            <nav class="navigation">
+                <a href="index.html">Home</a> |
+                <a href="profile.html">Profile</a> |
+                <a href="chat.html">Messages</a> |
+                <a href="#" id="logoutLink">Logout</a>
+            </nav>
         </header>
 
         <div class="chatroom">
-            <h1>Chatting with [xxxxxx]</h1>
+            <!-- title will be replaced with the actual chatroom title -->
+            <h1 id="chatroomTitle">Chatroom</h1>
+
             <div id="messages" class="messages"></div>
 
-            <form class="chat">
-
+            <form class="chat" id="chatForm">
                 <label for="message">Enter Message:</label>
-                <input type="text" id="message" name="text">
+                <input type="text" id="message" name="text" placeholder="Type a message">
 
-                <button type="submit">Send Message</button>
-                
+                <label for="image">Attach Image (optional):</label>
+                <input type="file" id="image" accept="image/*">
+
+                <button type="submit">Send</button>
             </form>
+
+            <p id="chatError" style="color: red;"></p>
+            <section class="participants">
+                <h2>Users in this chatroom</h2>
+                <ul id="participantList"></ul>
+                <p id="participantsError" style="color: red;"></p>
+            </section>
+
+
+
 
         </div>
 
         <script>
-            const form = document.querySelector(".chat");
-            const input = document.getElementById("message");
-            const messages = document.getElementById("messages");
-
-            form.addEventListener("submit", (e) => {
-            e.preventDefault();
-
-            const text = input.value.trim();
-            if (text === "") return;
-
-            const msg = document.createElement("div");
-            msg.classList.add("message", "sent");
-            msg.textContent = text;
-
-            messages.appendChild(msg);
-
-            input.value = "";
-            messages.scrollTop = messages.scrollHeight;
-        });
-        // If not logged in, force back to login
-            const logoutLink = document.getElementById('logoutLink');
+            // --- auth + logout (same as other pages) ---
             const userId = localStorage.getItem('userId');
             const userEmail = localStorage.getItem('userEmail');
+            const logoutLink = document.getElementById('logoutLink');
+            const participantList = document.getElementById('participantList');
+            const participantsError = document.getElementById('participantsError');
 
-        if (!userId || !userEmail) {
-            window.location.href = '../login.html';
-        }
 
-        // Logout: clear local storage and go to login
-        logoutLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('userId');
-            localStorage.removeItem('userEmail');
-            window.location.href = '../login.html';
-        });
+
+            async function loadParticipants()
+            {
+                if (!roomId)
+                return;
+
+                participantList.innerHTML = '';
+                participantsError.textContent = '';
+
+                try 
+                {
+                    const resp = await fetch(`http://localhost:8080/api/chatrooms/${roomId}/participants`);
+                    if (!resp.ok)
+                    {
+                        participantsError.textContent = 'Failed to load users.';
+                        return;
+                    }
+
+                    const users = await resp.json();
+
+                    if(!users.length)
+                    {
+                        const li = document.createElement('li');
+                        li.textContent = 'No users yet.';
+                        participantList.appendChild(li);
+                        return;
+                    }
+
+                    users.forEach(u => {
+                        const li = document.createElement('li');
+                        li.textContent = u.name || u.email || `User #${u.id}`;
+                        participantList.appendChild(li);
+                    });
+    
+
+                }
+                catch(e)
+                {
+                    console.error('Error', e);
+                    participantsError.textContent = 'Error contacting server.';
+                }
+
+
+
+            }
+
+
+
+
+
+
+
+            if (!userId || !userEmail) {
+                window.location.href = '../login.html';
+            }
+
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userEmail');
+                window.location.href = '../login.html';
+            });
+
+            // --- elements ---
+            const messagesEl = document.getElementById('messages');
+            const chatroomTitleEl = document.getElementById('chatroomTitle');
+            const chatErrorEl = document.getElementById('chatError');
+            const chatForm = document.getElementById('chatForm');
+            const messageInput = document.getElementById('message');
+            const imageInput = document.getElementById('image');
+
+            // --- get roomId from URL ---
+            const params = new URLSearchParams(window.location.search);
+            const roomId = params.get('roomId');
+
+            if (!roomId) {
+                chatErrorEl.textContent = 'No chatroom selected. Go back to Home and pick a room.';
+            }
+
+            // --- load chatroom info for title ---
+            async function loadRoomInfo() {
+                try {
+                    const resp = await fetch(`http://localhost:8080/api/chatrooms/${roomId}`);
+                    if (!resp.ok) {
+                        console.warn('Failed to load chatroom:', await resp.text());
+                        return;
+                    }
+                    const room = await resp.json();
+                    chatroomTitleEl.textContent = room.title || 'Chatroom';
+                } catch (e) {
+                    console.error('Error loading room info:', e);
+                }
+            }
+
+            // --- render one message ---
+            // backend MessageDto: {id, senderId, senderName, text, imageUrl, createdAt}
+            function renderMessage(msg) {
+                const div = document.createElement('div');
+                div.classList.add('message');
+
+                // style based on sender
+                if (msg.senderId && String(msg.senderId) === String(userId)) {
+                    div.classList.add('sent');
+                } else {
+                    div.classList.add('received');
+                }
+
+                const header = document.createElement('div');
+                header.classList.add('message-header');
+                header.textContent = msg.senderName || 'Anonymous';
+
+                const body = document.createElement('div');
+                body.classList.add('message-body');
+
+                if (msg.text) {
+                    const p = document.createElement('p');
+                    p.textContent = msg.text;
+                    body.appendChild(p);
+                }
+
+                if (msg.imageUrl) {
+                    const img = document.createElement('img');
+                    img.src = msg.imageUrl;   // e.g. /uploads/abc.jpg
+                    img.alt = 'Attached image';
+                    img.classList.add('message-image');
+                    body.appendChild(img);
+                }
+
+                div.appendChild(header);
+                div.appendChild(body);
+                messagesEl.appendChild(div);
+            }
+
+            // --- load all messages for this room ---
+            async function loadMessages() {
+                if (!roomId) return;
+
+                try {
+                    const resp = await fetch(`http://localhost:8080/api/chatrooms/${roomId}/messages`);
+                    if (!resp.ok) {
+                        chatErrorEl.textContent = 'Failed to load messages.';
+                        return;
+                    }
+
+                    const msgs = await resp.json();
+                    messagesEl.innerHTML = '';
+                    msgs.forEach(renderMessage);
+
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                } catch (e) {
+                    console.error('Error loading messages:', e);
+                    chatErrorEl.textContent = 'Error contacting server.';
+                }
+            }
+
+            // --- send a message (text + optional image) ---
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                chatErrorEl.textContent = '';
+
+                const text = messageInput.value.trim();
+                const file = imageInput.files[0];
+
+                if (!text && !file) {
+                    chatErrorEl.textContent = 'Please enter a message or attach an image.';
+                    return;
+                }
+
+                const formData = new FormData();
+                if (text) formData.append('text', text);
+                if (file) formData.append('image', file);
+                formData.append('senderId', userId);
+
+                try {
+                    const resp = await fetch(`http://localhost:8080/api/chatrooms/${roomId}/messages`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!resp.ok) {
+                        const errText = await resp.text();
+                        chatErrorEl.textContent = errText || 'Failed to send message.';
+                        return;
+                    }
+
+                    const newMsg = await resp.json();
+                    renderMessage(newMsg);
+
+
+                    // clear inputs
+                    messageInput.value = '';
+                    imageInput.value = '';
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                    loadParticipants();
+                } catch (e) {
+                    console.error('Error sending message:', e);
+                    chatErrorEl.textContent = 'Error contacting server.';
+                }
+            });
+
+            // --- initial load ---
+            if (roomId) {
+                loadRoomInfo();
+                loadMessages();
+                loadParticipants();
+
+                // basic polling for new messages every 3 seconds
+                setInterval(() => {
+                    loadMessages();
+                    loadParticipants();
+                }, 3000);
+            }
         </script>
     </body>
 </html>
-

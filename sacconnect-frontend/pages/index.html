@@ -3,31 +3,54 @@
     <head>
         <meta charset="UTF-8"> <!-- page uses standard encoding for characters  -->
         <title>Student Connect</title> <!-- title for top of page -->
-        <link rel = "stylesheet" href = "../css/style.css"> <!-- reference to css styling sheet -->
+        <link rel="stylesheet" href="../css/style.css"> <!-- reference to css styling sheet -->
     </head>
     <body class="homepage">
 
         <header>
-        <nav class="navigation"> <!-- navigation bar at the top  -->
-            <a href="index.html">Home</a> |
-            <a href="profile.html">Profile</a> |
-            <a href="chat.html">Messages</a> |
-            <a href="#" id="logoutLink">Logout</a>
-        </nav>
+            <nav class="navigation"> <!-- navigation bar at the top  -->
+                <a href="index.html">Home</a> |
+                <a href="profile.html">Profile</a> |
+                <a href="chat.html">Messages</a> |
+                <a href="#" id="logoutLink">Logout</a>
+            </nav>
         </header>
 
-        <h1> Welcome to Student Connect</h1>
+        <h1>Welcome to Student Connect</h1>
 
         <div class="layout">
-
             <main>
-                <h2>Welcome, [xxxxx]!</h2> <!-- title  -->
-                <section class="feed">  <!-- block of content (related)  -->
+                <!-- we give this an id so we can personalize later if you want -->
+                <h2 id="welcomeTitle">Welcome, [xxxxx]!</h2>
+
+                <section class="feed">
                     <p>Recent activity will appear here:</p>
                 </section>
+
+                <!-- NEW: public chatrooms list -->
+                <section class="chatrooms">
+    <h3>Public Chatrooms</h3>
+    <ul id="chatroomList">
+        <!-- Filled by JS -->
+    </ul>
+    <p id="chatroomError" style="color: red;"></p>
+
+    <!-- NEW: create chatroom form -->
+    <h4>Create a new chatroom</h4>
+    <form id="createChatroomForm">
+        <label for="newChatroomTitle">Title:</label>
+        <input type="text" id="newChatroomTitle" required>
+
+        <label for="newChatroomDescription">Description (optional):</label>
+        <input type="text" id="newChatroomDescription">
+
+        <button type="submit">Create Chatroom</button>
+    </form>
+    <p id="createChatroomMessage" style="color: green;"></p>
+</section>
             </main>
 
-            <aside class = "friends"> 
+            <aside class="friends">
                 <h3>Friends:</h3>
                 <ul>
                     <li>Bob</li>
@@ -39,24 +62,122 @@
         <footer class="footer">
             <p>© 2025 SacStateConnect</p>
         </footer>
-    
+
+        <script>
+            // --- auth + logout (same behavior as before) ---
+            const logoutLink = document.getElementById('logoutLink');
+            const userId = localStorage.getItem('userId');
+            const userEmail = localStorage.getItem('userEmail');
+
+            // If not logged in, force back to login
+            if (!userId || !userEmail) {
+                window.location.href = '../login.html';
+            }
+
+            // Logout: clear local storage and go to login
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userEmail');
+                window.location.href = '../login.html';
+            });
+
+            // --- load public chatrooms from backend ---
+            async function loadChatrooms() {
+                const listEl = document.getElementById('chatroomList');
+                const errorEl = document.getElementById('chatroomError');
+
+                listEl.innerHTML = '';
+                errorEl.textContent = '';
+
+                try {
+                    const resp = await fetch('http://localhost:8080/api/chatrooms');
+
+                    if (!resp.ok) {
+                        errorEl.textContent = 'Failed to load chatrooms.';
+                        return;
+                    }
+
+                    const rooms = await resp.json(); // expect [{id, title, description}, ...]
+
+                    if (!rooms.length) {
+                        const li = document.createElement('li');
+                        li.textContent = 'No chatrooms yet.';
+                        listEl.appendChild(li);
+                        return;
+                    }
+
+                    rooms.forEach(room => {
+                        const li = document.createElement('li');
+
+                        const link = document.createElement('a');
+                        // chat.html is in the same /pages/ folder, so this path is correct
+                        link.href = `chat.html?roomId=${encodeURIComponent(room.id)}`;
+                        link.textContent = room.title;
+
+                        li.appendChild(link);
+                        listEl.appendChild(li);
+                    });
+                } catch (e) {
+                    console.error('Error loading chatrooms:', e);
+                    errorEl.textContent = 'Error contacting server.';
+                }
+            }
+            const createChatroomForm = document.getElementById('createChatroomForm');
+            const newChatroomTitleInput = document.getElementById('newChatroomTitle');
+            const newChatroomDescriptionInput = document.getElementById('newChatroomDescription');
+            const createChatroomMessage = document.getElementById('createChatroomMessage');
+
+            createChatroomForm.addEventListener('submit', async (e) => {
+                 e.preventDefault();
+                 createChatroomMessage.style.color = 'green';
+                 createChatroomMessage.textContent = '';
+
+            const title = newChatroomTitleInput.value.trim();
+            const description = newChatroomDescriptionInput.value.trim();
+
+            if (!title) {
+                createChatroomMessage.style.color = 'red';
+                createChatroomMessage.textContent = 'Title is required.';
+                return;
+            }
+
+            try {
+                const resp = await fetch('http://localhost:8080/api/chatrooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description || null
+                    })
+        });
+
+            if (!resp.ok) {
+                const errText = await resp.text();
+                createChatroomMessage.style.color = 'red';
+                createChatroomMessage.textContent = errText || 'Failed to create chatroom.';
+                return;
+            }
+
+            // Success: clear inputs, message, and refresh list
+            newChatroomTitleInput.value = '';
+            newChatroomDescriptionInput.value = '';
+            createChatroomMessage.style.color = 'green';
+            createChatroomMessage.textContent = 'Chatroom created!';
+
+            // reload chatroom list
+            loadChatrooms();
+        } catch (e1) {
+            console.error('Error creating chatroom:', e1);
+            createChatroomMessage.style.color = 'red';
+            createChatroomMessage.textContent = 'Error contacting server.';
+        }
+    });
+
+
+            loadChatrooms();
+        </script>
     </body>
-    <script>
-    // If not logged in, force back to login
-        const logoutLink = document.getElementById('logoutLink');
-        const userId = localStorage.getItem('userId');
-        const userEmail = localStorage.getItem('userEmail');
-
-      if (!userId || !userEmail) {
-        window.location.href = '../login.html';
-      }
-
-      // Logout: clear local storage and go to login
-      logoutLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userEmail');
-        window.location.href = '../login.html';
-      });
-    </script>
 </html>
