@@ -155,7 +155,6 @@ public class ChatroomController {
         Path target = Path.of(uploadsDir, newName);
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-        // This URL must match your static resource handler
         return "/uploads/" + newName;
     }
 

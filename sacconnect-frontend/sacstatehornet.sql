@@ -1,5 +1,5 @@
-create database sac_state_student_info;
-use sac_state_student_info; 
+create database sacstatehornet;
+use sacstatehornet; 
 
 create table students (
 id int auto_increment primary key,
