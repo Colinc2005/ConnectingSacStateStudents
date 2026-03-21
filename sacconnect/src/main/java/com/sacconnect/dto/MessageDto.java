@@ -17,7 +17,7 @@ public record MessageDto (
         return new MessageDto(
             m.getId(),
             m.getSender() != null ? m.getSender().getId() : null,
-            m.getSender() != null ? m.getSender().getName() : "Anonymous",
+            m.getSender() != null ? m.getSender().getName() : "[deleted]",
             m.getText(),
             m.getImageUrl(),
             m.getCreatedAt()

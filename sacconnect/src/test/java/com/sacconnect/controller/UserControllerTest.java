@@ -25,20 +25,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.sacconnect.model.User;
+import com.sacconnect.repository.MessageRepository;
 import com.sacconnect.repository.UserRepository;
 import com.sacconnect.service.EmailService;
 
 class UserControllerTest {
 
     private UserRepository userRepository;
+    private MessageRepository messageRepository;
     private EmailService emailService;
     private UserController userController;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
+        messageRepository = mock(MessageRepository.class);
         emailService = mock(EmailService.class);
-        userController = new UserController(userRepository, emailService);
+        userController = new UserController(userRepository, messageRepository, emailService);
     }
 
     @Test

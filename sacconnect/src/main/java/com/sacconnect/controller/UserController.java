@@ -11,14 +11,17 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sacconnect.model.User;
+import com.sacconnect.repository.MessageRepository;
 import com.sacconnect.repository.UserRepository;
 import com.sacconnect.service.EmailService;
 
@@ -27,11 +30,13 @@ import com.sacconnect.service.EmailService;
 @CrossOrigin(origins = "*")
 public class UserController {
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
     private final EmailService emailService;
 
-    public UserController(UserRepository  userRepository, EmailService emailService)//default constructor
+    public UserController(UserRepository  userRepository, MessageRepository messageRepository, EmailService emailService)//default constructor
     {
         this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
         this.emailService = emailService;
     }
 
@@ -368,6 +373,34 @@ System.out.println("Email send invoked for: " + email);
 
         return ResponseEntity.ok(response);
         
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteUser(@PathVariable Long id)
+    {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty())
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        User user = optionalUser.get();
+
+        // Remove collection-table references owned by the user entity.
+        user.getInterests().clear();
+        user.getTags().clear();
+        userRepository.save(user);
+
+        // Keep chat messages but anonymize sender before deleting the account.
+        int anonymizedMessages = messageRepository.clearSenderForUser(id);
+        userRepository.delete(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("deletedUserId", id);
+        response.put("anonymizedMessages", anonymizedMessages);
+        response.put("status", "deleted");
+        return ResponseEntity.ok(response);
     }
 
 
