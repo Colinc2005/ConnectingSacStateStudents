@@ -29,6 +29,7 @@ import com.sacconnect.repository.MessageRepository;
 import com.sacconnect.repository.UserRepository;
 // request package in DTO
 import com.sacconnect.dto.request.CreateChatroomRequest;
+import com.sacconnect.service.ImageStorageService;
 
 @RestController
 @RequestMapping("/api/chatrooms")
@@ -38,13 +39,17 @@ public class ChatroomController {
     private final ChatroomRepository chatroomRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ImageStorageService imageStorageService;
 
-    public ChatroomController(ChatroomRepository chatroomRepository,
-                              MessageRepository messageRepository,
-                              UserRepository userRepository) {
+    public ChatroomController(
+            ChatroomRepository chatroomRepository,
+            MessageRepository messageRepository,
+            UserRepository userRepository,
+            ImageStorageService imageStorageService) {
         this.chatroomRepository = chatroomRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     // List all chatrooms (for index.html)
@@ -91,7 +96,7 @@ public class ChatroomController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sender not found");
         }
 
-        String imageUrl = null;
+        String imageUrl = imageStorageService.saveImage(image);
         if (image != null && !image.isEmpty()) {
             try {
                 imageUrl = saveImage(image);
@@ -145,22 +150,21 @@ public class ChatroomController {
     }
 
 
-    private String saveImage(MultipartFile file) throws IOException {
-        String uploadsDir = "uploads";
-        Files.createDirectories(Path.of(uploadsDir));
-
-        String originalName = file.getOriginalFilename();
-        String ext = "";
-        if (originalName != null && originalName.contains(".")) {
-            ext = originalName.substring(originalName.lastIndexOf('.'));
-        }
-        String newName = UUID.randomUUID() + ext;
-
-        Path target = Path.of(uploadsDir, newName);
-        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-
-        return "/uploads/" + newName;
-    }
-
+//    private String saveImage(MultipartFile file) throws IOException {
+//        String uploadsDir = "uploads";
+//        Files.createDirectories(Path.of(uploadsDir));
+//
+//        String originalName = file.getOriginalFilename();
+//        String ext = "";
+//        if (originalName != null && originalName.contains(".")) {
+//            ext = originalName.substring(originalName.lastIndexOf('.'));
+//        }
+//        String newName = UUID.randomUUID() + ext;
+//
+//        Path target = Path.of(uploadsDir, newName);
+//        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+//
+//        return "/uploads/" + newName;
+//    }
 
 }
