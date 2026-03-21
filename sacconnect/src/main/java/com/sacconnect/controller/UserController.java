@@ -1,4 +1,5 @@
 package com.sacconnect.controller;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,6 +23,12 @@ import com.sacconnect.model.User;
 import com.sacconnect.repository.UserRepository;
 import com.sacconnect.service.EmailService;
 
+//from request package, colin chung
+import com.sacconnect.dto.request.LoginRequest;
+import com.sacconnect.dto.request.RegisterUserRequest;
+import com.sacconnect.dto.request.UpdateUserProfileRequest;
+import com.sacconnect.dto.request.VerifyUserRequest;
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
@@ -37,31 +44,37 @@ public class UserController {
 
     //Registering account
     @PostMapping("/register") //This is a method that retrieves/sends/updates/deletes data
-    public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> body) //requestbody converts the HTTP request (account creation) and converts it into a java object and map
-    {
-        
-        String email = (String) body.get("email");
-        String password = (String) body.get("password");
-        String name = (String) body.get("name");
-        Integer age = body.get("age") == null ? null : (Integer) body.get("age");
-        String major = (String) body.get("major");
-        String bio = (String) body.get("bio");
+    public ResponseEntity<?> registerUser(@RequestBody RegisterUserRequest request) {
+        String email = request.getEmail();
+        String password = request.getPassword();
+        String name = request.getName();
+        Integer age = request.getAge();
+        String major = request.getMajor();
+        String bio = request.getBio();
 
-
-
-
-
-        @SuppressWarnings("unchecked")
-        List<String> interestsList = body.get("interests") == null
-                ? Collections.emptyList()
-                : (List<String>) body.get("interests");
+        List<String> interestsList =
+                request.getInterests() == null ? Collections.emptyList() : request.getInterests();
         Set<String> interests = new HashSet<>(interestsList);
 
-        @SuppressWarnings("unchecked")
-        List<String> tagsList = body.get("tags") == null
-            ? Collections.emptyList()
-                : (List<String>) body.get("tags");
+        List<String> tagsList =
+                request.getTags() == null ? Collections.emptyList() : request.getTags();
         Set<String> tags = new HashSet<>(tagsList);
+
+        // Old Code
+//        String email = (String) body.get("email");
+//        String password = (String) body.get("password");
+//        String name = (String) body.get("name");
+//        Integer age = body.get("age") == null ? null : (Integer) body.get("age");
+//        String major = (String) body.get("major");
+//        String bio = (String) body.get("bio");
+
+//        List<String> interestsList =
+//                request.getInterests() == null ? Collections.emptyList() : request.getInterests();
+//        Set<String> interests = new HashSet<>(interestsList);
+//
+//        List<String> tagsList =
+//                request.getTags() == null ? Collections.emptyList() : request.getTags();
+//        Set<String> tags = new HashSet<>(tagsList);
         
         if (email == null || password == null || name == null)
         {
@@ -125,40 +138,13 @@ public class UserController {
         user.setVerified(false);
         user.setVerificationCode(code);
         user.setVerificationExpiry(expiry);
-        isNewUser = true;
         }
 
         userRepository.save(user);
-
         //send email
         emailService.sendVerificationEmail(email, code);
-        if (existingOpt.isPresent()) {
-    user = existingOpt.get();
-    System.out.println("Existing user found. Verified = " + user.isVerified());
-
-    if (user.isVerified()) {
-        System.out.println("Blocking re-register because account is already verified.");
-        return ResponseEntity
-            .status(HttpStatus.CONFLICT)
-            .body("Email is already verified. Please log in");
-    }
-
-    System.out.println("Resending verification code to UNVERIFIED user.");
-    
-} else {
-    System.out.println("Creating NEW user.");
-    
-}
-System.out.println("Sending verification email with code: " + code);
-emailService.sendVerificationEmail(email, code);
-System.out.println("Email send invoked for: " + email);
-
-
-
-
 
         System.out.println("REGISTER called for email: " + email);
-
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
@@ -171,59 +157,45 @@ System.out.println("Email send invoked for: " + email);
         response.put("tags", user.getTags());
         response.put("verified", user.isVerified());
 
-
         return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(response);
-
-        
-
-
-
-    
-
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
-    //account verification
+
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyUser(@RequestBody Map<String, String> body)
-    {
-        System.out.println("VERIFY endpoint hit with body: " + body);
+    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest request) {
+        System.out.println("VERIFY endpoint hit with email: " + request.getEmail());
 
-        String email = body.get("email");
-        String code = body.get("code");
+        String email = request.getEmail();
+        String code = request.getCode();
 
-        if (email == null || code == null)
-        {
+        if (email == null || code == null) {
             return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("email and code are required");
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("email and code are required");
         }
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
-        if(optionalUser.isEmpty())
-        {
-            return ResponseEntity 
-                .status(HttpStatus.BAD_REQUEST)
-                .body("No user found for that email");
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("No user found for that email");
         }
-        
+
         User user = optionalUser.get();
 
-        if (user.isVerified())
-        {
+        if (user.isVerified()) {
             return ResponseEntity.ok("Account already verified");
         }
 
-        if(user.getVerificationCode() == null || 
-        user.getVerificationExpiry() == null || 
-        Instant.now().isAfter(user.getVerificationExpiry()) || 
-        !user.getVerificationCode().equals(code))
-        {
+        if (user.getVerificationCode() == null
+                || user.getVerificationExpiry() == null
+                || Instant.now().isAfter(user.getVerificationExpiry())
+                || !user.getVerificationCode().equals(code)) {
             return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("Invalid or expired verification code");
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid or expired verification code");
         }
-
 
         user.setVerified(true);
         user.setVerificationCode(null);
@@ -231,57 +203,46 @@ System.out.println("Email send invoked for: " + email);
         userRepository.save(user);
 
         return ResponseEntity.ok("Email verified successfully");
-
-
-
     }
 
-
-    //login
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> body)
-    {
-        String email = body.get("email");
-        String password = body.get("password");
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest request) {
+        String email = request.getEmail();
+        String password = request.getPassword();
 
-        if (email == null || password == null)
-        {
+        if (email == null || password == null) {
             return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("email and password are required");
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("email and password are required");
         }
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
 
-        if (optionalUser.isEmpty())
-        {
+        if (optionalUser.isEmpty()) {
             return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Invalid email or password");
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
         }
 
         User user = optionalUser.get();
 
-        if (!user.getPassword().equals(password))
-        {
+        if (!user.getPassword().equals(password)) {
             return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Invalid email or password");
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
         }
 
-        if (!user.isVerified())
-        {
+        if (!user.isVerified()) {
             return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Verify Email before logging in"); 
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Verify Email before logging in");
         }
 
         boolean profileComplete =
-            user.getAge() != null &&
-            user.getMajor() != null &&
-            user.getBio() != null;
+                user.getAge() != null
+                        && user.getMajor() != null
+                        && user.getBio() != null;
 
-        
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("email", user.getEmail());
@@ -293,40 +254,40 @@ System.out.println("Email send invoked for: " + email);
         response.put("tags", user.getTags());
         response.put("verified", user.isVerified());
         response.put("profileComplete", profileComplete);
+
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> body)
-    {
-        Long id = ((Number) body.get("id")).longValue();
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateUserProfileRequest request) {
+        Long id = request.getId();
+        if (id == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("User id is required");
+        }
 
         Optional<User> optionalUser = userRepository.findById(id);
 
-        if (optionalUser.isEmpty())
-        {
+        if (optionalUser.isEmpty()) {
             return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("User not found");
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("User not found");
         }
 
         User user = optionalUser.get();
 
-        String name = (String) body.get("name");
-        Integer age = body.get("age") == null ? null : (Integer) body.get("age");
-        String major = (String) body.get("major");
-        String bio = (String) body.get("bio");
+        String name = request.getName();
+        Integer age = request.getAge();
+        String major = request.getMajor();
+        String bio = request.getBio();
 
-        @SuppressWarnings("unchecked")
-        List<String> interestsList = body.get("interests") == null
-            ? Collections.emptyList()
-            : (List<String>) body.get("interests");
+        List<String> interestsList =
+                request.getInterests() == null ? Collections.emptyList() : request.getInterests();
         Set<String> interests = new HashSet<>(interestsList);
 
-        @SuppressWarnings("unchecked")
-        List<String> tagsList = body.get("tags") == null
-            ? Collections.emptyList()
-            : (List<String>) body.get("tags");
+        List<String> tagsList =
+                request.getTags() == null ? Collections.emptyList() : request.getTags();
         Set<String> tags = new HashSet<>(tagsList);
 
         user.setName(name);
@@ -339,18 +300,12 @@ System.out.println("Email send invoked for: " + email);
         userRepository.save(user);
 
         return ResponseEntity.ok("Profile Updated");
-
-
-
-
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id)
-    {
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
         Optional<User> opt = userRepository.findById(id);
-        if (opt.isEmpty())
-        {
+        if (opt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
 
@@ -367,12 +322,5 @@ System.out.println("Email send invoked for: " + email);
         response.put("verified", user.isVerified());
 
         return ResponseEntity.ok(response);
-        
     }
-
-
-
-
-
-
 }
