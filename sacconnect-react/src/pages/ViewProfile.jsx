@@ -9,10 +9,15 @@ export default function ViewProfile() {
   const [profile, setProfile] = useState(null);
   const [suggestions, setSuggestions] = useState([]); // State for other students
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setError("Missing logged-in user.");
+        setLoading(false);
+        return;
+      }
       
       try {
         // 1. Fetch current user profile
@@ -20,6 +25,8 @@ export default function ViewProfile() {
         if (profileResp.ok) {
           const data = await profileResp.json();
           setProfile(data);
+        } else {
+          setError("Could not load your profile.");
         }
 
         // 2. Fetch suggested connections (People with similar interests/major)
@@ -37,12 +44,34 @@ export default function ViewProfile() {
         }
       } catch (e) {
         setError("Connection error. Is the Spring Boot server on?");
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
   }, [user?.id]);
 
-  if (!profile && !error) return <div className="min-h-screen bg-ss-black flex items-center justify-center text-ss-gold italic">Gathering Hornet data...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-ss-black flex items-center justify-center text-ss-gold italic">
+        Gathering Hornet data...
+      </div>
+    );
+  }
+
+  if (error && !profile) {
+    return (
+      <div className="min-h-screen bg-ss-black flex flex-col items-center justify-center gap-4 text-center px-6">
+        <p className="text-red-400 font-bold">{error}</p>
+        <button
+          onClick={() => navigate('/edit-profile')}
+          className="px-6 py-3 rounded-xl bg-ss-green text-white font-bold hover:bg-ss-green/80 transition"
+        >
+          Go to Edit Profile
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-ss-black text-white p-6 md:p-12 font-sans selection:bg-ss-gold selection:text-ss-black">

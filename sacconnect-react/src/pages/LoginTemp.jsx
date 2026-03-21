@@ -22,7 +22,9 @@ export default function LoginTemp() {
       if (!resp.ok) return "Invalid credentials.";
       
       const data = await resp.json();
-      login(data);
+      const userPayload = data?.user ?? data;
+      const loginOk = login(userPayload);
+      if (!loginOk) return "Login response missing valid user id.";
       window.location.href = '/';
     } catch (e) {
       return "Backend is offline (Check Port 8080).";
