@@ -31,7 +31,7 @@ export default function Dashboard() {
       <main className="flex-1 p-8 lg:p-16 overflow-y-auto">
         <header className="mb-12 flex justify-between items-end gap-6">
           <div>
-            <h1 className="text-5xl font-black tracking-tight mb-2 uppercase italic">Sup, <span className="text-ss-gold underline decoration-ss-green underline-offset-8">Hornet?</span></h1>
+            <h1 className="text-5xl font-black tracking-tight mb-2 uppercase italic">Welcome back, <span className="text-ss-gold underline decoration-ss-green underline-offset-8">Hornet!</span></h1>
             <p className="text-gray-500 font-medium text-lg tracking-tight">{user?.email}</p>
           </div>
           <Link to="/profile" className="p-4 px-6 bg-white/5 rounded-2xl border border-white/10 hover:border-ss-gold transition group flex items-center gap-3">
