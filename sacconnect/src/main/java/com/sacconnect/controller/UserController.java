@@ -304,7 +304,32 @@ System.out.println("Email send invoked for: " + email);
     @PostMapping("/update-profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> body)
     {
-        Long id = ((Number) body.get("id")).longValue();
+        Object idObj = body.get("id");
+        if (idObj == null)
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("User id is required");
+        }
+
+        Long id;
+        try
+        {
+            if (idObj instanceof Number number)
+            {
+                id = number.longValue();
+            }
+            else
+            {
+                id = Long.parseLong(idObj.toString());
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Invalid user id");
+        }
 
         Optional<User> optionalUser = userRepository.findById(id);
 
@@ -318,28 +343,47 @@ System.out.println("Email send invoked for: " + email);
         User user = optionalUser.get();
 
         String name = (String) body.get("name");
-        Integer age = body.get("age") == null ? null : (Integer) body.get("age");
+        Integer age = body.get("age") == null ? null : ((Number) body.get("age")).intValue();
         String major = (String) body.get("major");
         String bio = (String) body.get("bio");
 
-        @SuppressWarnings("unchecked")
-        List<String> interestsList = body.get("interests") == null
-            ? Collections.emptyList()
-            : (List<String>) body.get("interests");
-        Set<String> interests = new HashSet<>(interestsList);
+        // Keep existing required fields unless the caller explicitly provides new values.
+        if (name != null && !name.trim().isEmpty())
+        {
+            user.setName(name);
+        }
+        if (body.containsKey("age"))
+        {
+            user.setAge(age);
+        }
+        if (body.containsKey("major"))
+        {
+            user.setMajor(major);
+        }
+        if (body.containsKey("bio"))
+        {
+            user.setBio(bio);
+        }
 
-        @SuppressWarnings("unchecked")
-        List<String> tagsList = body.get("tags") == null
-            ? Collections.emptyList()
-            : (List<String>) body.get("tags");
-        Set<String> tags = new HashSet<>(tagsList);
+        if (body.containsKey("interests"))
+        {
+            @SuppressWarnings("unchecked")
+            List<String> interestsList = body.get("interests") == null
+                ? Collections.emptyList()
+                : (List<String>) body.get("interests");
+            Set<String> interests = new HashSet<>(interestsList);
+            user.setInterests(interests);
+        }
 
-        user.setName(name);
-        user.setAge(age);
-        user.setMajor(major);
-        user.setBio(bio);
-        user.setInterests(interests);
-        user.setTags(tags);
+        if (body.containsKey("tags"))
+        {
+            @SuppressWarnings("unchecked")
+            List<String> tagsList = body.get("tags") == null
+                ? Collections.emptyList()
+                : (List<String>) body.get("tags");
+            Set<String> tags = new HashSet<>(tagsList);
+            user.setTags(tags);
+        }
 
         userRepository.save(user);
 
