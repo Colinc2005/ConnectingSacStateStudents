@@ -17,10 +17,10 @@
 
     <div class="profile-container">
       <div class="profile-header">
-        <!-- static placeholder avatar for now -->
+        
         <img src="avatar.jpg" alt="User Avatar" class="profile-avatar">
 
-        <!-- will be filled from backend -->
+        
         <h1 class="profile-name" id="profileName">Username</h1>
 
         <button class="report-button" id="editProfileButton">Edit Profile</button> 
@@ -33,13 +33,11 @@
       </div>
 
       <div class="profile-stats">
-        <!-- these can be wired later when you have posts/follows in DB -->
         <span id="postsStat">Posts: 0</span>
         <span id="followersStat">Followers: 0</span>
         <span id="followingStat">Following: 0</span>
       </div>
     </div>
-    <!-- Report User Popup -->
     <div class="report-overlay"></div>
     <div class="report-popup" id="reportPopup">
       <h3>Report User</h3>
@@ -66,25 +64,22 @@
       const sendBtn = document.getElementById('sendReport');
       const reasonBox = document.getElementById('reportReason');
 
-      //Open report popup
       reportButton.addEventListener('click', () => {
         popup.style.display = 'block';
         overlay.style.display = 'flex';
       });
 
-      //close report popup
       closeBtn.addEventListener('click', () => {
         popup.style.display = 'none';
         overlay.style.display = 'none';
       });
 
-      //close report popup when clicking outside
+
       overlay.addEventListener('click', () => {
         popup.style.display = 'none';
         overlay.style.display = 'none';
       });
 
-      // Submit report
       sendBtn.addEventListener('click', async () => {
         const reason = reasonBox.value.trim();
         if (reason === '') {
@@ -92,7 +87,6 @@
           return;
         }
 
-        // TODO: send to backend later maybe?
         console.log("Report submitted:", reason);
 
         alert("Report submitted!");
@@ -102,12 +96,10 @@
       });
 
 
-      // If not logged in, force back to login
       if (!userId || !userEmail) {
         window.location.href = '../login.html';
       }
 
-      // Logout: clear local storage and go to login
       logoutLink.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('userId');
@@ -115,12 +107,12 @@
         window.location.href = '../login.html';
       });
 
-      // Edit profile: go to your edit-profile flow
+
       editProfileButton.addEventListener('click', () => {
         window.location.href = './edit-profile.html';
       });
 
-      // Load the latest profile data from backend
+
       async function loadProfile() {
         try {
           const response = await fetch(`http://localhost:8080/api/users/${userId}`);
@@ -132,17 +124,12 @@
 
           const user = await response.json();
 
-          // Match the keys you return from your login/register endpoints:
-          // id, email, name, Age, major, bio, interests, tags, verified
+        
           profileNameEl.textContent = user.name || 'Student';
           profileBioEl.textContent = user.bio && user.bio.trim() !== ''
             ? user.bio
             : 'No bio yet. Click "Edit Profile" to add one.';
 
-          // Stats are just placeholders for now.
-          // Once you have posts/followers in the DB, fetch and set them here.
-          // document.getElementById('postsStat').textContent = `Posts: ${user.postsCount || 0}`;
-          // etc.
         } catch (err) {
           console.error('Error loading profile:', err);
         }

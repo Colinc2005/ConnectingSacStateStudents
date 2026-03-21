@@ -17,7 +17,6 @@
         </header>
 
         <div class="chatroom">
-            <!-- title will be replaced with the actual chatroom title -->
             <h1 id="chatroomTitle">Chatroom</h1>
 
             <div id="messages" class="messages"></div>
@@ -45,7 +44,6 @@
         </div>
 
         <script>
-            // --- auth + logout (same as other pages) ---
             const userId = localStorage.getItem('userId');
             const userEmail = localStorage.getItem('userEmail');
             const logoutLink = document.getElementById('logoutLink');
@@ -116,7 +114,6 @@
                 window.location.href = '../login.html';
             });
 
-            // --- elements ---
             const messagesEl = document.getElementById('messages');
             const chatroomTitleEl = document.getElementById('chatroomTitle');
             const chatErrorEl = document.getElementById('chatError');
@@ -124,7 +121,6 @@
             const messageInput = document.getElementById('message');
             const imageInput = document.getElementById('image');
 
-            // --- get roomId from URL ---
             const params = new URLSearchParams(window.location.search);
             const roomId = params.get('roomId');
 
@@ -132,7 +128,6 @@
                 chatErrorEl.textContent = 'No chatroom selected. Go back to Home and pick a room.';
             }
 
-            // --- load chatroom info for title ---
             async function loadRoomInfo() {
                 try {
                     const resp = await fetch(`http://localhost:8080/api/chatrooms/${roomId}`);
@@ -147,13 +142,10 @@
                 }
             }
 
-            // --- render one message ---
-            // backend MessageDto: {id, senderId, senderName, text, imageUrl, createdAt}
             function renderMessage(msg) {
                 const div = document.createElement('div');
                 div.classList.add('message');
 
-                // style based on sender
                 if (msg.senderId && String(msg.senderId) === String(userId)) {
                     div.classList.add('sent');
                 } else {
@@ -175,7 +167,7 @@
 
                 if (msg.imageUrl) {
                     const img = document.createElement('img');
-                    img.src = msg.imageUrl;   // e.g. /uploads/abc.jpg
+                    img.src = msg.imageUrl;   
                     img.alt = 'Attached image';
                     img.classList.add('message-image');
                     body.appendChild(img);
@@ -186,7 +178,6 @@
                 messagesEl.appendChild(div);
             }
 
-            // --- load all messages for this room ---
             async function loadMessages() {
                 if (!roomId) return;
 
@@ -208,7 +199,6 @@
                 }
             }
 
-            // --- send a message (text + optional image) ---
             chatForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 chatErrorEl.textContent = '';
@@ -242,7 +232,6 @@
                     renderMessage(newMsg);
 
 
-                    // clear inputs
                     messageInput.value = '';
                     imageInput.value = '';
                     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -253,13 +242,11 @@
                 }
             });
 
-            // --- initial load ---
             if (roomId) {
                 loadRoomInfo();
                 loadMessages();
                 loadParticipants();
 
-                // basic polling for new messages every 3 seconds
                 setInterval(() => {
                     loadMessages();
                     loadParticipants();

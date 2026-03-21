@@ -50,12 +50,10 @@
       const userId = localStorage.getItem('userId');
       const userEmail = localStorage.getItem('userEmail');
 
-      // If not logged in, bounce to login
       if (!userId || !userEmail) {
         window.location.href = '../login.html';
       }
 
-      // Logout behavior
       logoutLink.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('userId');
@@ -63,7 +61,6 @@
         window.location.href = '../login.html';
       });
 
-      // Pre-fill form with existing profile data (requires a GET endpoint like /api/users/{id})
       async function loadProfile() {
         try {
           const response = await fetch(`http://localhost:8080/api/users/${userId}`);
@@ -79,7 +76,6 @@
           document.getElementById('major').value = user.major || '';
           document.getElementById('bio').value = user.bio || '';
 
-          // interests and tags are Sets on the backend → come back as arrays in JSON
           if (user.interests && Array.isArray(user.interests)) {
             document.getElementById('interests').value = user.interests.join(', ');
           }
