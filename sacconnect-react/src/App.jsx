@@ -6,6 +6,7 @@ import LoginTemp from './pages/LoginTemp';
 import Signup from './pages/Signup';
 import Verify from './pages/Verify';
 import Dashboard from './pages/Dashboard';
+import EditProfile from './pages/EditProfile';
 
 // A helper component to redirect users to login if they aren't authenticated
 const ProtectedRoute = ({ children }) => {
@@ -32,7 +33,11 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-
+<Route path="/edit-profile" element={
+  <ProtectedRoute>
+    <EditProfile />
+  </ProtectedRoute>
+} />
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
