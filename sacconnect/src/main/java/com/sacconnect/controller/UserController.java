@@ -35,6 +35,7 @@ import com.sacconnect.dto.response.UserResponse;
 // service package
 import com.sacconnect.service.VerificationCodeService;
 import com.sacconnect.service.AuthService;
+import com.sacconnect.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -43,10 +44,11 @@ public class UserController {
     private UserRepository userRepository;
     private AuthService authService;
     private UserController userController;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository, AuthService authService) {
-        this.userRepository = userRepository;
+    public UserController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     //Registering account
@@ -67,57 +69,12 @@ public class UserController {
 
     @PostMapping("/update-profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateUserProfileRequest request) {
-        Long id = request.getId();
-        if (id == null) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("User id is required");
-        }
-
-        Optional<User> optionalUser = userRepository.findById(id);
-
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("User not found");
-        }
-
-        User user = optionalUser.get();
-
-        String name = request.getName();
-        Integer age = request.getAge();
-        String major = request.getMajor();
-        String bio = request.getBio();
-
-        List<String> interestsList =
-                request.getInterests() == null ? Collections.emptyList() : request.getInterests();
-        Set<String> interests = new HashSet<>(interestsList);
-
-        List<String> tagsList =
-                request.getTags() == null ? Collections.emptyList() : request.getTags();
-        Set<String> tags = new HashSet<>(tagsList);
-
-        user.setName(name);
-        user.setAge(age);
-        user.setMajor(major);
-        user.setBio(bio);
-        user.setInterests(interests);
-        user.setTags(tags);
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok(buildUserResponse(user));
+        return userService.updateProfile(request);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        Optional<User> opt = userRepository.findById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
-
-        User user = opt.get();
-        return ResponseEntity.ok(buildUserResponse(user));
+        return userService.getUserById(id);
     }
 
     private UserResponse buildUserResponse(User user) {

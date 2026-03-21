@@ -24,6 +24,7 @@ import com.sacconnect.dto.request.LoginRequest;
 import com.sacconnect.dto.request.UpdateUserProfileRequest;
 import com.sacconnect.dto.request.VerifyUserRequest;
 import com.sacconnect.dto.response.AuthResponse;
+import com.sacconnect.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -35,18 +36,19 @@ import com.sacconnect.service.EmailService;
 import com.sacconnect.service.AuthService;
 import com.sacconnect.dto.request.RegisterUserRequest;
 import com.sacconnect.dto.response.UserResponse;
+import com.sacconnect.service.UserService;
 
 class UserControllerTest {
 
-    private UserRepository userRepository;
     private AuthService authService;
+    private UserService userService;
     private UserController userController;
 
     @BeforeEach
     void setUp() {
-        userRepository = mock(UserRepository.class);
         authService = mock(AuthService.class);
-        userController = new UserController(userRepository, authService);
+        userService = mock(UserService.class);
+        userController = new UserController(authService, userService);
     }
 
     @Test
