@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,50 +32,41 @@ import com.sacconnect.repository.UserRepository;
 import com.sacconnect.dto.request.CreateChatroomRequest;
 import com.sacconnect.service.ImageStorageService;
 import com.sacconnect.service.MessageService;
+import com.sacconnect.service.ChatroomService;
 
 @RestController
 @RequestMapping("/api/chatrooms")
 @CrossOrigin(origins = "*")
 public class ChatroomController {
 
-    private final ChatroomRepository chatroomRepository;
-    private final MessageRepository messageRepository;
+    private final ChatroomService chatroomService;
     private final MessageService messageService;
 
     public ChatroomController(
-            ChatroomRepository chatroomRepository,
-            MessageRepository messageRepository,
+            ChatroomService chatroomService,
             MessageService messageService) {
-        this.chatroomRepository = chatroomRepository;
-        this.messageRepository = messageRepository;
+        this.chatroomService = chatroomService;
         this.messageService = messageService;
+
     }
 
     // List all chatrooms (for index.html)
     @GetMapping
     public List<Chatroom> getAllChatrooms() {
-        return chatroomRepository.findAll();
+        return chatroomService.getAllChatrooms();
     }
 
     // Get one chatroom
     @GetMapping("/{id}")
     public ResponseEntity<Chatroom> getChatroom(@PathVariable Long id) {
-        return chatroomRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return chatroomService.getChatroom(id);
     }
 
     // Get messages for a chatroom
     @GetMapping("/{id}/messages")
     public ResponseEntity<List<MessageDto>> getMessages(@PathVariable Long id) {
-        if (!chatroomRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        return chatroomService.getMessages(id);
         }
-
-        List<Message> messages = messageRepository.findByChatroomIdOrderByCreatedAtAsc(id);
-        List<MessageDto> dto = messages.stream().map(MessageDto::from).toList();
-        return ResponseEntity.ok(dto);
-    }
 
     // Post message (text + optional image)
     @PostMapping("/{id}/messages")
@@ -89,29 +81,12 @@ public class ChatroomController {
 
     @PostMapping
     public ResponseEntity<?> createChatroom(@RequestBody CreateChatroomRequest request) {
-        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Title is required");
-        }
-
-        Chatroom chatroom = new Chatroom();
-        chatroom.setTitle(request.getTitle().trim());
-
-        Chatroom saved = chatroomRepository.save(chatroom);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return chatroomService.createChatroom(request);
     }
 
     @GetMapping("/{id}/participants")
     public ResponseEntity<List<UserDto>> getParticipants(@PathVariable Long id) {
-        if (!chatroomRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        List<User> users = messageRepository.findDistinctSendersByChatroomId(id);
-        List<UserDto> dto = users.stream().map(UserDto::from).toList();
-
-        return ResponseEntity.ok(dto);
+        return chatroomService.getParticipants(id);
     }
 
 
