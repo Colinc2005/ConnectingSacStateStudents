@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -32,17 +33,22 @@ import com.sacconnect.dto.request.VerifyUserRequest;
 import com.sacconnect.dto.response.AuthResponse;
 import com.sacconnect.dto.response.UserResponse;
 
+import com.sacconnect.service.VerificationCodeService;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 public class UserController {
+    private final VerificationCodeService verificationCodeService;
     private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public UserController(UserRepository  userRepository, EmailService emailService)//default constructor
-    {
+    public UserController(
+            UserRepository userRepository,
+            EmailService emailService,
+            VerificationCodeService verificationCodeService) {
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.verificationCodeService = verificationCodeService;
     }
 
     //Registering account
@@ -98,8 +104,8 @@ public class UserController {
         Optional<User> existingOpt = userRepository.findByEmail(email);
 
         //6digit verificaiton code
-        String code = String.format("%06d", (int) (Math.random() * 1_000_000));
-        Instant expiry = Instant.now().plusSeconds(15 * 60);
+        String code = verificationCodeService.generateVerificationCode();
+        Instant expiry = verificationCodeService.generateVerificationExpiry();
 
         User user;
 
