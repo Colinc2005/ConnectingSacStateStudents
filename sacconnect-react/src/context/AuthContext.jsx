@@ -4,6 +4,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
+    // Check local storage so the user stays logged in on refresh
     const id = localStorage.getItem('userId');
     const email = localStorage.getItem('userEmail');
     return id ? { id, email } : null;
