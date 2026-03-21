@@ -30,6 +30,7 @@ import com.sacconnect.repository.UserRepository;
 // request package in DTO
 import com.sacconnect.dto.request.CreateChatroomRequest;
 import com.sacconnect.service.ImageStorageService;
+import com.sacconnect.service.MessageService;
 
 @RestController
 @RequestMapping("/api/chatrooms")
@@ -38,18 +39,15 @@ public class ChatroomController {
 
     private final ChatroomRepository chatroomRepository;
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
-    private final ImageStorageService imageStorageService;
+    private final MessageService messageService;
 
     public ChatroomController(
             ChatroomRepository chatroomRepository,
             MessageRepository messageRepository,
-            UserRepository userRepository,
-            ImageStorageService imageStorageService) {
+            MessageService messageService) {
         this.chatroomRepository = chatroomRepository;
         this.messageRepository = messageRepository;
-        this.userRepository = userRepository;
-        this.imageStorageService = imageStorageService;
+        this.messageService = messageService;
     }
 
     // List all chatrooms (for index.html)
@@ -86,40 +84,7 @@ public class ChatroomController {
             @RequestParam Long senderId,
             @RequestParam(required = false) MultipartFile image
     ) {
-        Optional<Chatroom> roomOpt = chatroomRepository.findById(id);
-        if (roomOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Chatroom not found");
-        }
-
-        Optional<User> userOpt = userRepository.findById(senderId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sender not found");
-        }
-
-        String imageUrl = imageStorageService.saveImage(image);
-        if (image != null && !image.isEmpty()) {
-            try {
-                imageUrl = saveImage(image);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Failed to save image");
-            }
-        }
-
-        if ((text == null || text.trim().isEmpty()) && imageUrl == null) {
-            return ResponseEntity.badRequest().body("Message must have text or image");
-        }
-
-        Message msg = new Message();
-        msg.setChatroom(roomOpt.get());
-        msg.setSender(userOpt.get());
-        msg.setText(text);
-        msg.setImageUrl(imageUrl);
-
-        msg = messageRepository.save(msg);
-
-        return ResponseEntity.ok(MessageDto.from(msg));
+        return messageService.postMessage(id, text, senderId, image);
     }
 
     @PostMapping
