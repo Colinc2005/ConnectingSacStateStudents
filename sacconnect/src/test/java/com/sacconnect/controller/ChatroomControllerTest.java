@@ -1,14 +1,11 @@
 package com.sacconnect.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,250 +14,110 @@ import org.springframework.http.ResponseEntity;
 
 import com.sacconnect.dto.MessageDto;
 import com.sacconnect.dto.UserDto;
+import com.sacconnect.dto.request.CreateChatroomRequest;
 import com.sacconnect.model.Chatroom;
-import com.sacconnect.model.Message;
-import com.sacconnect.model.User;
-import com.sacconnect.repository.ChatroomRepository;
-import com.sacconnect.repository.MessageRepository;
-import com.sacconnect.repository.UserRepository;
+import com.sacconnect.service.ChatroomService;
+import com.sacconnect.service.MessageService;
 
 class ChatroomControllerTest {
 
-    private ChatroomRepository chatroomRepository;
-    private MessageRepository messageRepository;
-    private UserRepository userRepository;
-
+    private ChatroomService chatroomService;
+    private MessageService messageService;
     private ChatroomController chatroomController;
 
     @BeforeEach
     void setUp() {
-        chatroomRepository = mock(ChatroomRepository.class);
-        messageRepository = mock(MessageRepository.class);
-        userRepository = mock(UserRepository.class);
-
-        chatroomController = new ChatroomController(
-                chatroomRepository,
-                messageRepository,
-                userRepository
-        );
+        chatroomService = mock(ChatroomService.class);
+        messageService = mock(MessageService.class);
+        chatroomController = new ChatroomController(chatroomService, messageService);
     }
 
-    // all chatrooms
-
     @Test
-    void getAllChatrooms_returnsListFromRepository() {
-        Chatroom room1 = new Chatroom();
-        room1.setId(1L);
-        room1.setTitle("Room 1");
+    void getAllChatrooms_returnsServiceResult() {
+        Chatroom room = new Chatroom();
+        room.setId(1L);
+        room.setTitle("Room 1");
+        List<Chatroom> expected = List.of(room);
 
-        when(chatroomRepository.findAll()).thenReturn(List.of(room1));
+        doReturn(expected).when(chatroomService).getAllChatrooms();
 
-        List<Chatroom> result = chatroomController.getAllChatrooms();
+        List<Chatroom> actual = chatroomController.getAllChatrooms();
 
-        assertEquals(1, result.size());
-        assertEquals("Room 1", result.get(0).getTitle());
+        assertEquals(expected, actual);
+        verify(chatroomService).getAllChatrooms();
     }
 
-    // Getting chatroom
-
     @Test
-    void getChatroom_returnsOkWhenFound() {
+    void getChatroom_returnsServiceResponse() {
         Chatroom room = new Chatroom();
         room.setId(5L);
         room.setTitle("Test Room");
+        ResponseEntity<Chatroom> expected = ResponseEntity.ok(room);
 
-        when(chatroomRepository.findById(5L)).thenReturn(Optional.of(room));
+        doReturn(expected).when(chatroomService).getChatroom(5L);
 
-        ResponseEntity<Chatroom> response = chatroomController.getChatroom(5L);
+        ResponseEntity<Chatroom> actual = chatroomController.getChatroom(5L);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(room, response.getBody());
+        assertEquals(expected, actual);
+        verify(chatroomService).getChatroom(5L);
     }
 
     @Test
-    void getChatroom_returnsNotFoundWhenMissing() {
-        when(chatroomRepository.findById(99L)).thenReturn(Optional.empty());
+    void getMessages_returnsServiceResponse() {
+        MessageDto dto = new MessageDto(10L, 123L, "Alice", "Hello", null, null);
+        ResponseEntity<List<MessageDto>> expected = ResponseEntity.ok(List.of(dto));
 
-        ResponseEntity<Chatroom> response = chatroomController.getChatroom(99L);
+        doReturn(expected).when(chatroomService).getMessages(1L);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+        ResponseEntity<List<MessageDto>> actual = chatroomController.getMessages(1L);
 
-    // getting messages
-
-    @Test
-    void getMessages_returnsNotFoundIfChatroomDoesNotExist() {
-        when(chatroomRepository.existsById(1L)).thenReturn(false);
-
-        ResponseEntity<List<MessageDto>> response = chatroomController.getMessages(1L);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(expected, actual);
+        verify(chatroomService).getMessages(1L);
     }
 
     @Test
-    void getMessages_returnsDtosWhenChatroomExists() {
-        when(chatroomRepository.existsById(1L)).thenReturn(true);
+    void postMessage_returnsServiceResponse() {
+        MessageDto dto = new MessageDto(50L, 123L, "Alice", "Hello world", null, null);
+        ResponseEntity<Object> expected = ResponseEntity.ok(dto);
 
-        Message msg = new Message();
-        msg.setId(10L);
-        msg.setText("Hello");
+        doReturn(expected).when(messageService).postMessage(1L, "Hello world", 123L, null);
 
-        when(messageRepository.findByChatroomIdOrderByCreatedAtAsc(1L))
-                .thenReturn(List.of(msg));
+        ResponseEntity<?> actual = chatroomController.postMessage(1L, "Hello world", 123L, null);
 
-        ResponseEntity<List<MessageDto>> response = chatroomController.getMessages(1L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<MessageDto> body = response.getBody();
-        assertNotNull(body);
-        assertEquals(1, body.size());
-    }
-
-    // Post message
-
-    @Test
-    void postMessage_returnsNotFoundIfChatroomMissing() {
-        when(chatroomRepository.findById(1L)).thenReturn(Optional.empty());
-
-        ResponseEntity<?> response = chatroomController.postMessage(
-                1L,
-                "Hello",
-                123L,
-                null
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Chatroom not found", response.getBody());
+        assertEquals(expected, actual);
+        verify(messageService).postMessage(1L, "Hello world", 123L, null);
     }
 
     @Test
-    void postMessage_returnsBadRequestIfSenderMissing() {
-        Chatroom room = new Chatroom();
-        room.setId(1L);
-        when(chatroomRepository.findById(1L)).thenReturn(Optional.of(room));
-        when(userRepository.findById(123L)).thenReturn(Optional.empty());
-
-        ResponseEntity<?> response = chatroomController.postMessage(
-                1L,
-                "Hello",
-                123L,
-                null
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Sender not found", response.getBody());
-    }
-
-    @Test
-    void postMessage_returnsBadRequestIfNoTextAndNoImage() {
-        Chatroom room = new Chatroom();
-        room.setId(1L);
-        when(chatroomRepository.findById(1L)).thenReturn(Optional.of(room));
-
-        User user = new User();
-        user.setId(123L);
-        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
-
-        // text is null and image is null
-        ResponseEntity<?> response = chatroomController.postMessage(
-                1L,
-                null,
-                123L,
-                null
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Message must have text or image", response.getBody());
-    }
-
-    @Test
-    void postMessage_withTextOnly_savesMessageAndReturnsDto() {
-        Chatroom room = new Chatroom();
-        room.setId(1L);
-        when(chatroomRepository.findById(1L)).thenReturn(Optional.of(room));
-
-        User user = new User();
-        user.setId(123L);
-        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
-
-        Message saved = new Message();
-        saved.setId(50L);
-        saved.setChatroom(room);
-        saved.setSender(user);
-        saved.setText("Hello world");
-
-        when(messageRepository.save(any(Message.class))).thenReturn(saved);
-
-        ResponseEntity<?> response = chatroomController.postMessage(
-                1L,
-                "Hello world",
-                123L,
-                null
-        );
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(messageRepository).save(any(Message.class));
-    }
-
-    // making chatroom 
-
-    @Test
-    void createChatroom_returnsBadRequestWhenTitleMissing() {
-        Chatroom room = new Chatroom();
-        room.setTitle("   "); // should be blank for now
-
-        ResponseEntity<?> response = chatroomController.createChatroom(room);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Title is required", response.getBody());
-    }
-
-    @Test
-    void createChatroom_savesAndReturnsCreated() {
-        Chatroom room = new Chatroom();
-        room.setTitle("New Room");
+    void createChatroom_returnsServiceResponse() {
+        CreateChatroomRequest request = new CreateChatroomRequest();
+        request.setTitle("New Room");
 
         Chatroom saved = new Chatroom();
         saved.setId(10L);
         saved.setTitle("New Room");
 
-        when(chatroomRepository.save(any(Chatroom.class))).thenReturn(saved);
+        ResponseEntity<Object> expected =
+                ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
-        ResponseEntity<?> response = chatroomController.createChatroom(room);
+        doReturn(expected).when(chatroomService).createChatroom(request);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(saved, response.getBody());
-        verify(chatroomRepository).save(any(Chatroom.class));
-    }
+        ResponseEntity<?> actual = chatroomController.createChatroom(request);
 
-    
-
-    @Test
-    void getParticipants_returnsNotFoundIfChatroomMissing() {
-        when(chatroomRepository.existsById(1L)).thenReturn(false);
-
-        ResponseEntity<List<UserDto>> response = chatroomController.getParticipants(1L);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(expected, actual);
+        verify(chatroomService).createChatroom(request);
     }
 
     @Test
-    void getParticipants_returnsDtosWhenChatroomExists() {
-        when(chatroomRepository.existsById(1L)).thenReturn(true);
+    void getParticipants_returnsServiceResponse() {
+        UserDto userDto = new UserDto(123L, "Alice", "alice@csus.edu");
+        ResponseEntity<List<UserDto>> expected = ResponseEntity.ok(List.of(userDto));
 
-        User u = new User();
-        u.setId(123L);
-        u.setName("Alice");
+        doReturn(expected).when(chatroomService).getParticipants(1L);
 
-        when(messageRepository.findDistinctSendersByChatroomId(1L))
-                .thenReturn(List.of(u));
+        ResponseEntity<List<UserDto>> actual = chatroomController.getParticipants(1L);
 
-        ResponseEntity<List<UserDto>> response = chatroomController.getParticipants(1L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<UserDto> body = response.getBody();
-        assertNotNull(body);
-        assertEquals(1, body.size());
+        assertEquals(expected, actual);
+        verify(chatroomService).getParticipants(1L);
     }
 }
