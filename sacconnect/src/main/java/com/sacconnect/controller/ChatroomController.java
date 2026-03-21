@@ -27,6 +27,8 @@ import com.sacconnect.model.User;
 import com.sacconnect.repository.ChatroomRepository;
 import com.sacconnect.repository.MessageRepository;
 import com.sacconnect.repository.UserRepository;
+// request package in DTO
+import com.sacconnect.dto.request.CreateChatroomRequest;
 
 @RestController
 @RequestMapping("/api/chatrooms")
@@ -116,18 +118,20 @@ public class ChatroomController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createChatroom(@RequestBody Chatroom chatroom) {
-        if (chatroom.getTitle() == null || chatroom.getTitle().trim().isEmpty()) {
+    public ResponseEntity<?> createChatroom(@RequestBody CreateChatroomRequest request) {
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body("Title is required");
         }
 
-        chatroom.setId(null);
+        Chatroom chatroom = new Chatroom();
+        chatroom.setTitle(request.getTitle().trim());
 
         Chatroom saved = chatroomRepository.save(chatroom);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
+
     @GetMapping("/{id}/participants")
     public ResponseEntity<List<UserDto>> getParticipants(@PathVariable Long id) {
         if (!chatroomRepository.existsById(id)) {
