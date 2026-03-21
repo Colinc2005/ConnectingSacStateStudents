@@ -23,6 +23,7 @@ import com.sacconnect.model.User;
 import com.sacconnect.repository.ChatroomRepository;
 import com.sacconnect.repository.MessageRepository;
 import com.sacconnect.repository.UserRepository;
+import com.sacconnect.dto.request.CreateChatroomRequest;
 
 class ChatroomControllerTest {
 
@@ -207,10 +208,10 @@ class ChatroomControllerTest {
 
     @Test
     void createChatroom_returnsBadRequestWhenTitleMissing() {
-        Chatroom room = new Chatroom();
-        room.setTitle("   "); // should be blank for now
+        CreateChatroomRequest request = new CreateChatroomRequest();
+        request.setTitle("New Room");
 
-        ResponseEntity<?> response = chatroomController.createChatroom(room);
+        ResponseEntity<?> response = chatroomController.createChatroom(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Title is required", response.getBody());
@@ -218,8 +219,8 @@ class ChatroomControllerTest {
 
     @Test
     void createChatroom_savesAndReturnsCreated() {
-        Chatroom room = new Chatroom();
-        room.setTitle("New Room");
+        CreateChatroomRequest request = new CreateChatroomRequest();
+        request.setTitle("New Room");
 
         Chatroom saved = new Chatroom();
         saved.setId(10L);
@@ -227,7 +228,7 @@ class ChatroomControllerTest {
 
         when(chatroomRepository.save(any(Chatroom.class))).thenReturn(saved);
 
-        ResponseEntity<?> response = chatroomController.createChatroom(room);
+        ResponseEntity<?> response = chatroomController.createChatroom(request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(saved, response.getBody());
