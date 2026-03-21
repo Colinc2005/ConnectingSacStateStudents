@@ -11,7 +11,6 @@ import com.sacconnect.dto.MessageDto;
 import com.sacconnect.dto.UserDto;
 import com.sacconnect.dto.request.CreateChatroomRequest;
 import com.sacconnect.model.Chatroom;
-import com.sacconnect.model.User;
 import com.sacconnect.repository.ChatroomRepository;
 import com.sacconnect.repository.MessageRepository;
 

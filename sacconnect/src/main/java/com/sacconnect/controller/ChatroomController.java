@@ -1,14 +1,7 @@
 package com.sacconnect.controller;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,13 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.sacconnect.dto.MessageDto;
 import com.sacconnect.dto.UserDto;
 import com.sacconnect.model.Chatroom;
-import com.sacconnect.model.Message;
-import com.sacconnect.model.User;
-import com.sacconnect.repository.ChatroomRepository;
-import com.sacconnect.repository.MessageRepository;
-import com.sacconnect.repository.UserRepository;
+
 // request package in DTO
 import com.sacconnect.dto.request.CreateChatroomRequest;
+// service package
 import com.sacconnect.service.ImageStorageService;
 import com.sacconnect.service.MessageService;
 import com.sacconnect.service.ChatroomService;
