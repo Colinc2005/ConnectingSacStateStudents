@@ -29,6 +29,9 @@ import com.sacconnect.dto.request.RegisterUserRequest;
 import com.sacconnect.dto.request.UpdateUserProfileRequest;
 import com.sacconnect.dto.request.VerifyUserRequest;
 
+import com.sacconnect.dto.response.AuthResponse;
+import com.sacconnect.dto.response.UserResponse;
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
@@ -100,8 +103,6 @@ public class UserController {
 
         User user;
 
-        boolean isNewUser = false;
-
         if (existingOpt.isPresent()) {
             user = existingOpt.get();
             if (user.isVerified())
@@ -142,24 +143,9 @@ public class UserController {
 
         userRepository.save(user);
         //send email
-        emailService.sendVerificationEmail(email, code);
-
-        System.out.println("REGISTER called for email: " + email);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-        response.put("Age", user.getAge());
-        response.put("major", user.getMajor());
-        response.put("bio", user.getBio());
-        response.put("interests", user.getInterests());
-        response.put("tags", user.getTags());
-        response.put("verified", user.isVerified());
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(buildUserResponse(user));
     }
 
     @PostMapping("/verify")
@@ -243,17 +229,10 @@ public class UserController {
                         && user.getMajor() != null
                         && user.getBio() != null;
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-        response.put("Age", user.getAge());
-        response.put("major", user.getMajor());
-        response.put("bio", user.getBio());
-        response.put("interests", user.getInterests());
-        response.put("tags", user.getTags());
-        response.put("verified", user.isVerified());
-        response.put("profileComplete", profileComplete);
+        AuthResponse response = new AuthResponse();
+        response.setUser(buildUserResponse(user));
+        response.setProfileComplete(profileComplete);
+        response.setMessage("Login successful");
 
         return ResponseEntity.ok(response);
     }
@@ -299,7 +278,7 @@ public class UserController {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok("Profile Updated");
+        return ResponseEntity.ok(buildUserResponse(user));
     }
 
     @GetMapping("/{id}")
@@ -310,17 +289,20 @@ public class UserController {
         }
 
         User user = opt.get();
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-        response.put("Age", user.getAge());
-        response.put("major", user.getMajor());
-        response.put("bio", user.getBio());
-        response.put("interests", user.getInterests());
-        response.put("tags", user.getTags());
-        response.put("verified", user.isVerified());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(buildUserResponse(user));
+    }
+    // helper method to build UserResponse from User
+    private UserResponse buildUserResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setName(user.getName());
+        response.setAge(user.getAge());
+        response.setMajor(user.getMajor());
+        response.setBio(user.getBio());
+        response.setInterests(user.getInterests());
+        response.setTags(user.getTags());
+        response.setVerified(user.isVerified());
+        return response;
     }
 }
