@@ -58,9 +58,13 @@ export default function Mentorship() {
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-ss-card p-12 rounded-[3rem] border border-white/10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-10">
             <div className="absolute top-0 right-0 w-96 h-96 bg-ss-green/5 blur-[120px] -mr-20 -mt-20"></div>
-            <div className="w-48 h-48 rounded-[2.5rem] bg-ss-green/20 border-2 border-ss-gold/30 flex items-center justify-center text-ss-gold text-6xl font-black shadow-2xl">
-              BC
-            </div>
+           <div className="w-48 h-48 rounded-[2.5rem] overflow-hidden border-2 border-ss-gold/30 shadow-2xl">
+  <img 
+    src="https://cdn.discordapp.com/attachments/1484618688098205811/1485020741715099719/1759810233240.jpeg?ex=69c058d7&is=69bf0757&hm=3dbb39feaea42177edbcab9fb0ca0d76b5b2f2fd0003d0c22779f7c38aa4b508&" 
+    alt="Ben Chong" 
+    className="w-full h-full object-cover"
+  />
+</div>
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-wrap items-center gap-3 mb-6 justify-center md:justify-start">
                 <span className="bg-ss-gold/10 text-ss-gold text-[10px] font-black px-4 py-1.5 rounded-full border border-ss-gold/20 uppercase tracking-[0.2em]">Top Rated Mentor</span>

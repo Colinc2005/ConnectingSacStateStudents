@@ -19,9 +19,6 @@ export default function Dashboard() {
           <Link to="/profile" className="flex items-center gap-4 text-gray-500 p-4 hover:text-white transition-all group">
             <User size={22} className="group-hover:text-ss-gold transition-colors"/> My Profile
           </Link>
-          <Link to="/edit-profile" className="flex items-center gap-4 text-gray-500 p-4 hover:text-white transition-all group">
-            <Settings size={22} className="group-hover:text-ss-gold transition-colors"/> Settings
-          </Link>
         </nav>
         <button onClick={logout} className="text-red-400/60 flex items-center gap-4 p-4 hover:bg-red-400/10 hover:text-red-400 rounded-2xl transition-all font-bold">
           <LogOut size={22}/> Sign Out
