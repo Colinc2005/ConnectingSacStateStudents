@@ -19,6 +19,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+
+import com.sacconnect.dto.request.LoginRequest;
+import com.sacconnect.dto.request.UpdateUserProfileRequest;
+import com.sacconnect.dto.request.VerifyUserRequest;
+import com.sacconnect.dto.response.AuthResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -27,208 +32,171 @@ import org.springframework.http.ResponseEntity;
 import com.sacconnect.model.User;
 import com.sacconnect.repository.UserRepository;
 import com.sacconnect.service.EmailService;
+import com.sacconnect.service.AuthService;
+import com.sacconnect.dto.request.RegisterUserRequest;
+import com.sacconnect.dto.response.UserResponse;
 
 class UserControllerTest {
 
     private UserRepository userRepository;
-    private EmailService emailService;
+    private AuthService authService;
     private UserController userController;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        emailService = mock(EmailService.class);
-        userController = new UserController(userRepository, emailService);
+        authService = mock(AuthService.class);
+        userController = new UserController(userRepository, authService);
     }
 
     @Test
-    void registerUser_createsNewUnverifiedUser_andSendsEmail() {
-        // Arrange
-        Map<String, Object> body = new HashMap<>();
-        body.put("email", "newuser@csus.edu");
-        body.put("password", "secret123");
-        body.put("name", "New User");
-        body.put("age", 21);
-        body.put("major", "Computer Science");
-        body.put("bio", "Hi, I am new here!");
-        body.put("interests", java.util.List.of("gaming", "cs"));
-        body.put("tags", java.util.List.of("freshman"));
+    void registerUser_returnsServiceResponse() {
+        RegisterUserRequest request = new RegisterUserRequest();
+        request.setEmail("newuser@csus.edu");
+        request.setPassword("secret123");
+        request.setName("New User");
 
-        // no existing user with this email
-        when(userRepository.findByEmail("newuser@csus.edu"))
-                .thenReturn(Optional.empty());
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(1L);
+        userResponse.setEmail("newuser@csus.edu");
+        userResponse.setName("New User");
+        userResponse.setVerified(false);
 
-        // simulate DB assigning an ID
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User u = invocation.getArgument(0);
-            u.setId(1L);                 // pretending the DB generated ID = 1 because of an issue saving ID 
-            return u;
-        });
+        ResponseEntity<?> expectedResponse =
+                ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
 
-      
-        ResponseEntity<?> responseEntity = userController.registerUser(body);
+        when(authService.registerUser(request)).thenReturn(expectedResponse);
 
-     
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+        ResponseEntity<?> actualResponse = userController.registerUser(request);
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> response = (Map<String, Object>) responseEntity.getBody();
-        assertNotNull(response);
-        assertEquals(1L, response.get("id"));
-        assertEquals("newuser@csus.edu", response.get("email"));
-        assertEquals("New User", response.get("name"));
-        assertFalse((Boolean) response.get("verified"));
-
-        // verify that an email was sent
-        verify(emailService, times(2)).sendVerificationEmail(eq("newuser@csus.edu"), anyString());        // verify a user was saved
-        verify(userRepository).save(any(User.class));
+        assertEquals(expectedResponse, actualResponse);
+        verify(authService).registerUser(request);
     }
 
     @Test
-    void registerUser_rejectsNonCsusEmail() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("email", "someone@gmail.com");
-        body.put("password", "pw");
-        body.put("name", "Bad Email User");
+    void verifyUser_returnsServiceResponse() {
+        VerifyUserRequest request = new VerifyUserRequest();
+        request.setEmail("verifyme@csus.edu");
+        request.setCode("123456");
 
-        ResponseEntity<?> responseEntity = userController.registerUser(body);
+        ResponseEntity<?> expectedResponse =
+                ResponseEntity.ok("Email verified successfully");
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals("Email must end with @csus.edu", responseEntity.getBody());
+        when(authService.verifyUser(request)).thenReturn(expectedResponse);
+
+        ResponseEntity<?> actualResponse = userController.verifyUser(request);
+
+        assertEquals(expectedResponse, actualResponse);
+        verify(authService).verifyUser(request);
     }
 
     @Test
-    void registerUser_missingRequiredFields_returnsBadRequest() {
-        Map<String, Object> body = new HashMap<>();
-        // no email / password / name
+    void loginUser_returnsServiceResponse() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("student@csus.edu");
+        request.setPassword("secret123");
 
-        ResponseEntity<?> responseEntity = userController.registerUser(body);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(42L);
+        userResponse.setEmail("student@csus.edu");
+        userResponse.setName("Login User");
+        userResponse.setAge(20);
+        userResponse.setMajor("CS");
+        userResponse.setBio("I like tests.");
+        userResponse.setInterests(Set.of("gaming"));
+        userResponse.setTags(Set.of("junior"));
+        userResponse.setVerified(true);
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals("email, password, and name are required", responseEntity.getBody());
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setUser(userResponse);
+        authResponse.setProfileComplete(true);
+        authResponse.setMessage("Login successful");
+
+        ResponseEntity<?> expectedResponse = ResponseEntity.ok(authResponse);
+
+        when(authService.loginUser(request)).thenReturn(expectedResponse);
+
+        ResponseEntity<?> actualResponse = userController.loginUser(request);
+
+        assertEquals(expectedResponse, actualResponse);
+        verify(authService).loginUser(request);
     }
 
     @Test
-    void verifyUser_successfullyVerifiesUserWithCorrectCode() {
-        // Arrange
-        String email = "verifyme@csus.edu";
-        String code = "123456";
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", email);
-        body.put("code", code);
+    void updateProfile_updatesExistingUser() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest();
+        request.setId(7L);
+        request.setName("Updated User");
+        request.setAge(22);
+        request.setMajor("Computer Science");
+        request.setBio("Updated bio");
+        request.setInterests(java.util.List.of("gaming", "coding"));
+        request.setTags(java.util.List.of("senior"));
 
         User user = new User();
-        user.setEmail(email);
-        user.setVerified(false);
-        user.setVerificationCode(code);
-        user.setVerificationExpiry(Instant.now().plusSeconds(900));
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        
-        ResponseEntity<?> responseEntity = userController.verifyUser(body);
-
-        
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("Email verified successfully", responseEntity.getBody());
-        assertTrue(user.isVerified());
-        // after verification controller should clear code/expiry
-        assertEquals(null, user.getVerificationCode());
-        assertEquals(null, user.getVerificationExpiry());
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    void verifyUser_withInvalidCode_returnsBadRequest() {
-        String email = "verifyme@csus.edu";
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", email);
-        body.put("code", "WRONG");
-
-        User user = new User();
-        user.setEmail(email);
-        user.setVerified(false);
-        user.setVerificationCode("123456");
-        user.setVerificationExpiry(Instant.now().plusSeconds(900));
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        ResponseEntity<?> responseEntity = userController.verifyUser(body);
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals("Invalid or expired verification code", responseEntity.getBody());
-    }
-
-    @Test
-    void loginUser_successfulLoginReturnsUserData() {
-        String email = "student@csus.edu";
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", email);
-        body.put("password", "secret123");
-
-        User user = new User();
-        user.setId(42L);
-        user.setEmail(email);
+        user.setId(7L);
+        user.setEmail("updated@csus.edu");
         user.setPassword("secret123");
-        user.setName("Login User");
+        user.setName("Old Name");
         user.setAge(20);
+        user.setMajor("Old Major");
+        user.setBio("Old bio");
+        user.setInterests(Set.of("old"));
+        user.setTags(Set.of("junior"));
+        user.setVerified(true);
+
+        when(userRepository.findById(7L)).thenReturn(Optional.of(user));
+
+        ResponseEntity<?> responseEntity = userController.updateProfile(request);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        UserResponse response = (UserResponse) responseEntity.getBody();
+        assertEquals("Updated User", response.getName());
+        assertEquals(22, response.getAge());
+        assertEquals("Computer Science", response.getMajor());
+        assertEquals("Updated bio", response.getBio());
+        assertEquals(Set.of("gaming", "coding"), response.getInterests());
+        assertEquals(Set.of("senior"), response.getTags());
+    }
+
+    @Test
+    void updateProfile_returnsBadRequestWhenIdMissing() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest();
+
+        ResponseEntity<?> responseEntity = userController.updateProfile(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals("User id is required", responseEntity.getBody());
+    }
+
+    @Test
+    void getUserById_returnsUserResponse() {
+        User user = new User();
+        user.setId(5L);
+        user.setEmail("student@csus.edu");
+        user.setName("Student User");
+        user.setAge(21);
         user.setMajor("CS");
-        user.setBio("I like tests.");
+        user.setBio("Hello");
         user.setInterests(Set.of("gaming"));
         user.setTags(Set.of("junior"));
         user.setVerified(true);
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(user));
 
-        ResponseEntity<?> responseEntity = userController.loginUser(body);
+        ResponseEntity<?> responseEntity = userController.getUserById(5L);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> response = (Map<String, Object>) responseEntity.getBody();
-        assertNotNull(response);
-        assertEquals(42L, response.get("id"));
-        assertEquals(email, response.get("email"));
-        assertEquals("Login User", response.get("name"));
-        assertEquals(20, response.get("Age"));
-        assertEquals("CS", response.get("major"));
-        assertEquals("I like tests.", response.get("bio"));
-        assertEquals(Set.of("gaming"), response.get("interests"));
-        assertEquals(Set.of("junior"), response.get("tags"));
-        assertTrue((Boolean) response.get("verified"));
-    }
-
-    @Test
-    void loginUser_invalidPasswordReturnsUnauthorized() {
-        String email = "student@csus.edu";
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", email);
-        body.put("password", "wrongPW");
-
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword("correctPW");
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        ResponseEntity<?> responseEntity = userController.loginUser(body);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
-        assertEquals("Invalid email or password", responseEntity.getBody());
-    }
-
-    @Test
-    void loginUser_missingFieldsReturnsBadRequest() {
-        Map<String, String> body = new HashMap<>();
-        // no email / password
-
-        ResponseEntity<?> responseEntity = userController.loginUser(body);
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals("email and password are required", responseEntity.getBody());
+        UserResponse response = (UserResponse) responseEntity.getBody();
+        assertEquals(5L, response.getId());
+        assertEquals("student@csus.edu", response.getEmail());
+        assertEquals("Student User", response.getName());
+        assertEquals(21, response.getAge());
+        assertEquals("CS", response.getMajor());
+        assertEquals("Hello", response.getBio());
+        assertEquals(Set.of("gaming"), response.getInterests());
+        assertEquals(Set.of("junior"), response.getTags());
     }
 }
