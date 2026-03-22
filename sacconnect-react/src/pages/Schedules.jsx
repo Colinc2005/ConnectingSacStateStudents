@@ -86,6 +86,10 @@ export default function Schedules() {
   const scheduleResult = location.state?.scheduleResult;
   const selectedClasses = location.state?.selectedClasses || [];
   const [activeTab, setActiveTab] = useState('overallBest');
+  const [activeProfessorName, setActiveProfessorName] = useState(null);
+  const [summaryByProfessorName, setSummaryByProfessorName] = useState({});
+  const [summaryLoadingProfessorName, setSummaryLoadingProfessorName] = useState(null);
+  const [summaryError, setSummaryError] = useState(null);
 
   const tabs = useMemo(() => ([
     { key: 'overallBest', label: 'Overall Best' },
@@ -109,6 +113,32 @@ export default function Schedules() {
   }
 
   const activeSchedules = scheduleResult[activeTab] || [];
+
+  const handleProfessorClick = async (professorName) => {
+    if (!professorName) return;
+    setActiveProfessorName(professorName);
+    setSummaryError(null);
+
+    if (summaryByProfessorName[professorName]) {
+      return;
+    }
+
+    setSummaryLoadingProfessorName(professorName);
+    try {
+      const resp = await fetch(`http://localhost:8080/api/professors/ai-summary?name=${encodeURIComponent(professorName)}`);
+      const payload = await resp.json();
+      if (!resp.ok) {
+        throw new Error(payload?.error || 'Failed to fetch AI summary.');
+      }
+      setSummaryByProfessorName(prev => ({ ...prev, [professorName]: payload }));
+    } catch (e) {
+      setSummaryError(e.message || 'Failed to fetch AI summary.');
+    } finally {
+      setSummaryLoadingProfessorName(null);
+    }
+  };
+
+  const activeSummary = activeProfessorName ? summaryByProfessorName[activeProfessorName] : null;
 
   return (
     <div className="min-h-screen bg-[#004e38] text-white p-6 md:p-12">
@@ -142,6 +172,47 @@ export default function Schedules() {
             </button>
           ))}
         </div>
+
+        {(activeProfessorName || summaryError) && (
+          <section className="mb-8 bg-ss-card border border-white/10 rounded-3xl p-6">
+            <h3 className="text-xl font-black uppercase tracking-tight mb-3">
+              AI Professor Summary
+            </h3>
+            {summaryLoadingProfessorName === activeProfessorName && (
+              <p className="text-white/70">Generating summary...</p>
+            )}
+            {summaryError && (
+              <p className="text-red-300 font-bold">{summaryError}</p>
+            )}
+            {activeSummary && summaryLoadingProfessorName !== activeProfessorName && (
+              <div className="space-y-4">
+                <p className="text-white/90">
+                  <span className="font-black text-ss-gold">{activeSummary.professorName}</span>
+                  <span className="text-white/60"> ({activeSummary.reviewsAnalyzed} reviews analyzed)</span>
+                </p>
+                <p className="text-white/85 leading-relaxed">{activeSummary.threeSentenceSummary}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-ss-gold text-xs font-black uppercase tracking-widest mb-2">Pros</p>
+                    <ul className="space-y-1 text-sm text-white/85">
+                      {(activeSummary.pros || []).map((item, idx) => (
+                        <li key={`pro-${idx}`}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-ss-gold text-xs font-black uppercase tracking-widest mb-2">Cons</p>
+                    <ul className="space-y-1 text-sm text-white/85">
+                      {(activeSummary.cons || []).map((item, idx) => (
+                        <li key={`con-${idx}`}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {!activeSchedules.length ? (
           <div className="bg-ss-card border border-white/10 rounded-3xl p-8 text-white/70">
@@ -187,7 +258,13 @@ export default function Schedules() {
                         Section {section.sectionNumber} (CRN: {section.sourceCrn})
                       </p>
                       <p className="text-sm mt-2 flex items-center gap-2 text-white/85">
-                        <School size={14} /> {section.professorName}
+                        <button
+                          type="button"
+                          onClick={() => handleProfessorClick(section.professorName)}
+                          className="inline-flex items-center gap-2 hover:text-ss-gold transition-colors"
+                        >
+                          <School size={14} /> {section.professorName}
+                        </button>
                         <span className="text-ss-gold font-bold">
                           ({section.professorOverallRating} / {section.professorReviewCount} reviews)
                         </span>
