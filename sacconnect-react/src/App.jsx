@@ -10,6 +10,7 @@ import ViewProfile from './pages/ViewProfile';
 import EditProfile from './pages/EditProfile';
 import Mentorship from './pages/Mentorship';
 import Majors from './pages/Majors'; // New Import
+import Schedules from './pages/Schedules';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
           <Route path="/mentorship" element={<ProtectedRoute><Mentorship /></ProtectedRoute>} />
           <Route path="/majors" element={<ProtectedRoute><Majors /></ProtectedRoute>} />
+          <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

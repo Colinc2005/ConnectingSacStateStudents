@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, CheckCircle, Sparkles, Code } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Majors() {
+  const navigate = useNavigate();
   const [selectedMajor, setSelectedMajor] = useState(null);
   const [selectedClasses, setSelectedClasses] = useState([]);
+  const [catalogCourses, setCatalogCourses] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
 
   const csClasses = [
     { id: "CSC10", code: "CSC 10", name: "Introduction to Programming Logic", units: 3 },
@@ -46,10 +51,97 @@ export default function Majors() {
   ];
 
   const toggleClass = (courseId) => {
+    setError(null);
     if (selectedClasses.includes(courseId)) {
       setSelectedClasses(selectedClasses.filter(c => c !== courseId));
     } else {
       setSelectedClasses([...selectedClasses, courseId]);
+    }
+  };
+
+  const normalizeCode = (code) => (code || '').replace(/\s+/g, '').toUpperCase();
+
+  useEffect(() => {
+    async function loadCatalogCourses() {
+      if (selectedMajor !== 'Computer Science') return;
+
+      setLoadingCatalog(true);
+      try {
+        const resp = await fetch('http://localhost:8080/api/catalog/majors/CSC/courses');
+        if (!resp.ok) {
+          throw new Error('Failed to load course catalog.');
+        }
+        const data = await resp.json();
+        setCatalogCourses(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setCatalogCourses([]);
+        setError('Could not load CSC catalog from backend.');
+      } finally {
+        setLoadingCatalog(false);
+      }
+    }
+
+    loadCatalogCourses();
+  }, [selectedMajor]);
+
+  const handleGenerateSchedules = async () => {
+    if (selectedClasses.length < 2 || isGenerating) return;
+    setError(null);
+    setIsGenerating(true);
+
+    try {
+      let courses = catalogCourses;
+      if (!courses.length) {
+        const resp = await fetch('http://localhost:8080/api/catalog/majors/CSC/courses');
+        if (!resp.ok) {
+          throw new Error('Failed to load course catalog.');
+        }
+        courses = await resp.json();
+      }
+
+      const idByCode = new Map(
+        (courses || []).map(course => [normalizeCode(course.code), course.id])
+      );
+
+      const missingCodes = [];
+      const courseIds = selectedClasses
+        .map(code => {
+          const id = idByCode.get(normalizeCode(code));
+          if (!id) missingCodes.push(code);
+          return id;
+        })
+        .filter(Boolean);
+
+      if (missingCodes.length > 0) {
+        throw new Error(`Missing backend course IDs for: ${missingCodes.join(', ')}`);
+      }
+
+      const generateResp = await fetch('http://localhost:8080/api/schedules/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseIds,
+          preferredStartMin: 540,
+          preferredEndMin: 1020,
+          topNPerCategory: 3
+        })
+      });
+
+      const payload = await generateResp.json();
+      if (!generateResp.ok) {
+        throw new Error(payload?.error || 'Failed to generate schedules.');
+      }
+
+      navigate('/schedules', {
+        state: {
+          scheduleResult: payload,
+          selectedClasses
+        }
+      });
+    } catch (e) {
+      setError(e.message || 'Failed to generate schedules.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -115,11 +207,21 @@ export default function Majors() {
               </div>
 
               {selectedClasses.length >= 2 && (
-                <button className="bg-ss-green text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 animate-pulse shadow-2xl hover:bg-ss-green/80 transition-all">
+                <button
+                  onClick={handleGenerateSchedules}
+                  disabled={isGenerating || loadingCatalog}
+                  className="bg-ss-green text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 animate-pulse shadow-2xl hover:bg-ss-green/80 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <Sparkles size={18} className="text-ss-gold" /> Generate Schedule
                 </button>
               )}
             </div>
+
+            {error && (
+              <p className="text-red-300 bg-red-900/30 border border-red-400/30 rounded-xl px-4 py-3 text-sm font-bold">
+                {error}
+              </p>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {csClasses.map((course) => (
