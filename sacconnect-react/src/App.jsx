@@ -8,7 +8,8 @@ import Verify from './pages/Verify';
 import Dashboard from './pages/Dashboard';
 import ViewProfile from './pages/ViewProfile';
 import EditProfile from './pages/EditProfile';
-import Mentorship from './pages/Mentorship'; // New Import
+import Mentorship from './pages/Mentorship';
+import Majors from './pages/Majors'; // New Import
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -21,15 +22,17 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/login" element={<LoginTemp />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify" element={<Verify />} />
 
-          {/* Protected Area */}
+          {/* Private Routes */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
           <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
           <Route path="/mentorship" element={<ProtectedRoute><Mentorship /></ProtectedRoute>} />
+          <Route path="/majors" element={<ProtectedRoute><Majors /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

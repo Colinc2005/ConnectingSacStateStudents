@@ -4,28 +4,26 @@ const AuthContext = createContext();
 
 function normalizeUser(raw) {
   if (!raw) return null;
-  const id = raw.id;
+  const id = raw.id || raw.userId;
   const email = raw.email;
+  const name = raw.name;
 
   if (id === null || id === undefined) return null;
   const idStr = String(id).trim();
-  if (!idStr || idStr === 'undefined' || idStr === 'null' || Number.isNaN(Number(idStr))) {
-    return null;
-  }
+  if (!idStr || idStr === 'undefined' || idStr === 'null' || idStr === '[object Object]') return null;
   if (!email) return null;
 
-  return { ...raw, id: idStr, email: String(email) };
+  return { id: idStr, email: String(email), name: name ? String(name) : null };
 }
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    // Check local storage so the user stays logged in on refresh
     const id = localStorage.getItem('userId');
     const email = localStorage.getItem('userEmail');
-    const normalized = normalizeUser({ id, email });
+    const name = localStorage.getItem('userName');
+    const normalized = normalizeUser({ id, email, name });
     if (!normalized) {
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userEmail');
+      localStorage.clear();
       return null;
     }
     return normalized;
@@ -34,13 +32,13 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     const normalized = normalizeUser(userData);
     if (!normalized) {
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userEmail');
+      localStorage.clear();
       setUser(null);
       return false;
     }
     localStorage.setItem('userId', normalized.id);
     localStorage.setItem('userEmail', normalized.email);
+    if (normalized.name) localStorage.setItem('userName', normalized.name);
     setUser(normalized);
     return true;
   };
@@ -57,4 +55,8 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
