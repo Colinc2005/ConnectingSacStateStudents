@@ -4,16 +4,15 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "course_professors")
+@IdClass(CourseProfessorId.class)
 public class CourseProfessor {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @Id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "professor_id", nullable = false)
     private Professor professor;
@@ -24,10 +23,6 @@ public class CourseProfessor {
     public CourseProfessor(Course course, Professor professor) {
         this.course = course;
         this.professor = professor;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Course getCourse() {
