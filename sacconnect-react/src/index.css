@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  /* Official Sacramento State Palette */
+  --color-ss-green: #004E38;
+  --color-ss-gold: #C4B581;
+  --color-ss-black: #0A0A0A;
+  --color-ss-card: #161616;
+}
+
+body {
+  background-color: var(--color-ss-black);
+  color: white;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
